@@ -175,7 +175,9 @@ def _componente_cargo_habilidades(prog, perfil) -> tuple[float, list[str]]:
     if elegidas:
         cubiertas = [_HABILIDADES[h]["etiqueta"] for h in elegidas if _afinidad_catalogo(prog, _HABILIDADES[h]) >= 0.5]
         puntaje_hab = len(cubiertas) / len(elegidas)
-        if cubiertas:
+        if cubiertas and len(elegidas) == 1:
+            razones.append(f"Fortalece la competencia que quieres priorizar: {cubiertas[0].lower()}.")
+        elif cubiertas:
             lista = ", ".join(c.lower() for c in cubiertas[:3])
             razones.append(f"Fortalece {len(cubiertas)} de las {len(elegidas)} habilidades que marcaste: {lista}.")
 

@@ -170,3 +170,73 @@ def test_skills_genericas_no_cuentan_como_habilidad():
     for r in recomendar(perfil, REALES, limite=20):
         if r["programa_nombre"] == "Especialización en Dirección Comercial y Ventas":
             assert not any("investigación" in x for x in r["razones"])
+
+
+# ------------------------------------------------ registro nuevo (web/)
+REGISTRO = {
+    "profile": {
+        "firstName": "María José", "lastName": "Pérez Gómez", "documentType": "CC",
+        "documentNumber": "1067123456", "email": "Maria.Perez@correo.co", "phone": "+57 300 123 4567",
+        "country": "Colombia", "city": "Montería", "program": "3", "graduationYear": 2024,
+        "privacyConsent": True,
+    },
+    "survey": {
+        "employmentStatus": "tiempo_completo", "targetRole": "Gerente comercial",
+        "preferredEducationType": "especializacion", "preferredPerformanceArea": "comercial_marketing",
+        "preferredEconomicSector": "comercio", "yearsOfExperience": "2_5", "prioritySkill": "negociacion",
+        "preferredModality": "virtual", "mainEducationBarrier": "tiempo", "preferredGraduateService": "mentorias",
+    },
+    "completedAt": "2026-09-22T18:00:00Z",
+    "status": "completed",
+}
+
+
+def _registro(**cambios):
+    datos = json.loads(json.dumps(REGISTRO))
+    for ruta, valor in cambios.items():
+        seccion, campo = ruta.split("__")
+        datos[seccion][campo] = valor
+    return datos
+
+
+def test_perfil_para_recomendador():
+    from app.registro import RegistroEgresado, perfil_para_recomendador
+
+    perfil = perfil_para_recomendador(RegistroEgresado.model_validate(REGISTRO), PROGRAMAS)
+    assert perfil["areas_interes"] == ["comercial_marketing"]
+    assert perfil["nivel_formacion"] == "especializacion"  # el programa 3 del catalogo es especializacion
+    assert perfil["programa_egreso"] == "3"
+    otra = RegistroEgresado.model_validate(_registro(survey__preferredPerformanceArea="otra",
+                                                     profile__program="otro"))
+    perfil_otra = perfil_para_recomendador(otra, PROGRAMAS)
+    assert perfil_otra["areas_interes"] == [] and perfil_otra["nivel_formacion"] == "profesional"
+
+
+def test_api_registro_nuevo(cliente):
+    r = cliente.post("/api/registros", json=REGISTRO)
+    assert r.status_code == 200, r.text
+    cuerpo = r.json()
+    assert cuerpo["recommendations"][0]["programName"] == "Especialización en Gerencia Comercial"
+    assert cuerpo["recommendations"][0]["reasons"]
+    token = cuerpo["registrationId"]
+
+    guardadas = cliente.get(f"/api/registros/{token}/recomendaciones").json()
+    assert guardadas["name"] == "María José"
+    assert guardadas["recommendations"][0]["programName"] == "Especialización en Gerencia Comercial"
+
+    # mismo documento: actualiza el mismo registro
+    r2 = cliente.post("/api/registros", json=_registro(profile__city="Barranquilla"))
+    assert r2.json()["registrationId"] == token
+
+
+@pytest.mark.parametrize("cambios", [
+    {"survey__preferredPerformanceArea": "astronautica"},
+    {"profile__privacyConsent": False},
+    {"profile__phone": "12"},
+    {"profile__documentNumber": "12.345"},
+    {"profile__graduationYear": 1990},
+    {"profile__program": "999"},
+    {"survey__targetRole": ""},
+])
+def test_api_registro_rechaza_datos_invalidos(cliente, cambios):
+    assert cliente.post("/api/registros", json=_registro(**cambios)).status_code == 422

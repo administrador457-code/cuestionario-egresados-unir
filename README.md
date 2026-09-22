@@ -50,9 +50,11 @@ recomienda. Cada recomendación guarda sus razones en texto.
 
 En `web/` está la nueva aplicación de registro y caracterización (React +
 TypeScript + Vite): datos del egresado, 10 preguntas una por pantalla,
-guardado temporal y confirmación. Por ahora el envío es simulado y no está
-publicada; el cuestionario en línea sigue siendo `frontend/`. Instrucciones en
-[`web/README.md`](web/README.md).
+guardado temporal, confirmación y programas recomendados. Está publicada en
+Vercel (https://registro-egresados-unir.vercel.app) y envía a
+`POST /api/registros` de este backend, que guarda en `registros_egresados` y
+`recomendaciones_registro`. El modelo y sus catálogos están en
+`app/registro.py`. Instrucciones en [`web/README.md`](web/README.md).
 
 ## Estructura
 
@@ -79,6 +81,8 @@ tests/
 | GET | `/api/preguntas` | Las 10 preguntas con opciones |
 | POST | `/api/respuestas` | Guarda registro + respuestas y devuelve recomendaciones y un `token` |
 | GET | `/api/egresados/{token}/recomendaciones` | Recomendaciones guardadas |
+| POST | `/api/registros` | Registro nuevo (frontend `web/`): guarda y devuelve recomendaciones |
+| GET | `/api/registros/{token}/recomendaciones` | Recomendaciones de un registro nuevo |
 
 El `token` es un UUID aleatorio: las URL de resultados no exponen el id ni el
 correo del egresado.
@@ -115,7 +119,7 @@ Proyecto de Railway `app-desarrollo-egresados-unir` (su `postgres` original no s
 | Servicio | Qué es | Configuración |
 |---|---|---|
 | `Postgres` | Base propia del cuestionario | Plantilla de Railway |
-| `cuestionario-web` | API + frontend | Arranque `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/api/health`. Variable `DATABASE_URL=${{Postgres.DATABASE_URL}}` |
+| `cuestionario-web` | API + frontend | Arranque `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/api/health`. Variables `DATABASE_URL=${{Postgres.DATABASE_URL}}` y `CORS_ORIGINS` (dominios del frontend de Vercel) |
 | `cuestionario-sync` | Sincronización diaria del catálogo | Comando `python scripts/sincronizar_programas.py`, cron `0 11 * * *` (6 a. m. Colombia), reinicio `NEVER`. Variables `DATABASE_URL` y `PROGRAMAS_DATABASE_URL` |
 
 La configuración vive en cada servicio de Railway (no hay `railway.json` en

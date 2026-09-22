@@ -3,9 +3,9 @@
 Aplicación React + TypeScript (Vite) para que el egresado actualice sus datos y
 responda 10 preguntas sobre su proyección profesional, una por pantalla.
 
-Todavía no está conectada al backend: el envío es simulado (ver "Conectar la
-API"). Vive en `web/` y no modifica el backend FastAPI ni el cuestionario que
-ya está en línea (`frontend/`).
+Envía los registros al backend FastAPI de este mismo repo (ver "Conexión con
+la API"). Vive en `web/` y se publica en Vercel:
+https://registro-egresados-unir.vercel.app
 
 ## Ejecutar (PowerShell)
 
@@ -25,9 +25,6 @@ npm run build        # verifica tipos y genera web/dist
 npm run preview      # sirve la versión compilada
 ```
 
-Para ver el estado de error del envío abre `http://localhost:5173/?simularError=1`:
-el primer envío falla y "Volver a intentar" funciona.
-
 ## Estructura
 
 ```
@@ -46,33 +43,39 @@ src/
   config/
     surveyQuestions.ts            las 10 preguntas y sus opciones
     formOptions.ts                tipos de documento, países, programas, años
-    app.ts                        enlace de "¿Necesitas ayuda?"
+    app.ts                        URL del backend y enlace de "¿Necesitas ayuda?"
   lib/
     validation.ts                 reglas de validación
     draftStorage.ts               localStorage (clave unirGraduateDraft)
   services/
-    registrationService.ts        envío simulado  <-- aquí se conecta la API
+    registrationService.ts        envío a la API (POST /api/registros)
   types/graduate.ts               modelo de datos
   styles/                         tokens, estilos globales y botones
 ```
 
-## Conectar la API
+## Conexión con la API
 
-Solo hay que cambiar `submitGraduateRegistration` en
-`src/services/registrationService.ts`. El comentario del archivo trae un
-ejemplo con `fetch`. Los componentes no se tocan: solo esperan que la función
-resuelva o lance un error.
+El envío ya es real. `submitGraduateRegistration` en
+`src/services/registrationService.ts` hace `POST {API_URL}/api/registros` al
+backend FastAPI de Railway. El backend guarda el registro en la tabla
+`registros_egresados`, calcula las recomendaciones de programas UNIR y las
+devuelve; la pantalla final las muestra.
 
-Recibe un `GraduateRegistration` (`profile`, `survey`, `completedAt`,
-`status`). En `survey` se guardan valores estables (por ejemplo
-`comercial_marketing`), no los textos que ve el egresado.
+La URL del backend está en `src/config/app.ts`. Por defecto es
+`https://cuestionario-web-production.up.railway.app` y se puede cambiar sin
+tocar código con la variable `VITE_API_URL` (en Vercel, o en `web/.env.local`
+para desarrollo).
 
-El backend actual (`POST /api/respuestas`) espera el modelo anterior del
-cuestionario. Antes de conectar hay que agregar en FastAPI un endpoint para
-este modelo (p. ej. `POST /api/egresados`) y su tabla. Las respuestas de área
-(`preferredPerformanceArea`), sector (`preferredEconomicSector`) y competencia
-(`prioritySkill`) ya usan los mismos valores que el recomendador, así que se
-pueden cruzar con el catálogo de programas sin traducción.
+El backend solo acepta peticiones del navegador desde los dominios listados en
+su variable `CORS_ORIGINS` (Railway, servicio `cuestionario-web`). Si publicas
+el frontend en otro dominio, agrégalo ahí.
+
+Para probar el estado de error sin cortar la red, abre la app con
+`?simularError=1`: el primer envío falla y "Volver a intentar" funciona.
+
+Si cambias o agregas un `value` en `config/surveyQuestions.ts`, actualiza
+también los catálogos de `app/registro.py` en el backend; si no, el backend
+rechazará el registro con error 422.
 
 La lista de programas está fija en `config/formOptions.ts` con los ids del
-catálogo. Cuando haya API, puede cargarse desde el backend.
+catálogo sincronizado. Si el catálogo cambia, actualízala.

@@ -178,7 +178,7 @@ export default function App() {
     setSubmitStatus("submitting");
     try {
       const registration = buildRegistration(profile, answers);
-      await submitGraduateRegistration(registration);
+      const result = await submitGraduateRegistration(registration);
       clearDraft();
       setCompletion({
         fullName: `${registration.profile.firstName} ${registration.profile.lastName}`,
@@ -186,11 +186,13 @@ export default function App() {
         graduationYear: registration.profile.graduationYear,
         answered: answeredCount,
         total: TOTAL_QUESTIONS,
+        recommendations: result.recommendations ?? [],
       });
       setSubmitStatus("idle");
       setToast(null);
       setStage("done");
-    } catch {
+    } catch (error) {
+      console.warn("No se pudo enviar el registro:", error);
       setSubmitStatus("error");
     } finally {
       submittingRef.current = false;

@@ -1,54 +1,62 @@
-import type { GraduateRegistration } from "../types/graduate";
+import { API_URL } from "../config/app";
+import type { GraduateRegistration, ProgramRecommendation } from "../types/graduate";
 
 /**
  * ============================================================================
- *  PUNTO DE CONEXIÓN CON LA API
+ *  CONEXIÓN CON LA API
  * ============================================================================
- * Esta función SIMULA el envío. Para conectar el backend real, reemplaza el
- * cuerpo por una llamada fetch, por ejemplo:
+ * Envía el registro a POST {API_URL}/api/registros (FastAPI en Railway).
+ * El backend lo guarda en la base de datos (tabla registros_egresados) y
+ * devuelve las recomendaciones de programas UNIR.
  *
- *   const response = await fetch(`${import.meta.env.VITE_API_URL}/api/egresados`, {
- *     method: "POST",
- *     headers: { "Content-Type": "application/json" },
- *     body: JSON.stringify(data),
- *   });
- *   if (!response.ok) throw new RegistrationError("El servidor rechazó el registro.");
- *   return (await response.json()) as SubmitResult;
- *
- * El resto de la aplicación solo depende de que esta función resuelva con un
- * SubmitResult o lance un error; no hay que tocar ningún componente.
+ * Los componentes solo dependen de que esta función resuelva con un
+ * SubmitResult o lance un RegistrationError.
  * ============================================================================
  */
 
 export interface SubmitResult {
-  /** Identificador que devolverá la API. En la simulación es aleatorio. */
+  /** Identificador público del registro (UUID). */
   registrationId: string;
   receivedAt: string;
+  recommendations: ProgramRecommendation[];
 }
 
 export class RegistrationError extends Error {}
 
-const SIMULATED_DELAY_MS = 1200;
+const TIMEOUT_MS = 20000;
 
 /**
- * Para probar el estado de error, abre la app con `?simularError=1`:
- * el primer envío falla y el reintento funciona.
+ * Para probar el estado de error sin cortar la red, abre la app con
+ * `?simularError=1`: el primer envío falla y el reintento funciona.
  */
 let simulatedFailurePending =
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("simularError");
 
 export async function submitGraduateRegistration(data: GraduateRegistration): Promise<SubmitResult> {
-  await new Promise((resolve) => window.setTimeout(resolve, SIMULATED_DELAY_MS));
-
   if (simulatedFailurePending) {
     simulatedFailurePending = false;
+    await new Promise((resolve) => window.setTimeout(resolve, 800));
     throw new RegistrationError("Error simulado de red.");
   }
 
-  const result: SubmitResult = {
-    registrationId: crypto.randomUUID(),
-    receivedAt: new Date().toISOString(),
-  };
-  console.info("[registro simulado] Datos que se enviarían a la API:", data, result);
-  return result;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const response = await fetch(`${API_URL}/api/registros`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new RegistrationError(`El servidor respondió ${response.status}. ${detail}`);
+    }
+    return (await response.json()) as SubmitResult;
+  } catch (error) {
+    if (error instanceof RegistrationError) throw error;
+    throw new RegistrationError(error instanceof Error ? error.message : "Error de red.");
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }

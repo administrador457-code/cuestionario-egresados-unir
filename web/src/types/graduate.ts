@@ -87,3 +87,15 @@ export interface GraduateDraft {
   currentQuestion: number;
   savedAt: string;
 }
+
+/** Programa UNIR recomendado por el backend según las respuestas. */
+export interface ProgramRecommendation {
+  position: number;
+  programId: number;
+  programName: string;
+  programType: string | null;
+  /** Afinidad de 0 a 100. */
+  score: number;
+  reasons: string[];
+  url: string | null;
+}

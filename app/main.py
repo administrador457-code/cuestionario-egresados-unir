@@ -6,12 +6,17 @@ Endpoints:
     POST /api/respuestas                     -> guarda respuestas y devuelve recomendaciones
     GET  /api/egresados/{token}/recomendaciones
 
+Registro y caracterizacion (frontend React de web/, en Vercel):
+    POST /api/registros                        -> guarda el registro y devuelve recomendaciones
+    GET  /api/registros/{token}/recomendaciones
+
 El frontend (carpeta /frontend) se sirve en la raiz del mismo servicio.
 """
 from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -40,6 +45,7 @@ from .preguntas import (
     valores,
 )
 from .recomendador import recomendar
+from .registro import PROGRAMA_OTRO, VERSION_REGISTRO, RegistroEgresado, perfil_para_recomendador
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
@@ -165,6 +171,53 @@ def ver_recomendaciones(token: str) -> dict[str, Any]:
         "nombre": egresado["nombre"],
         "cargo_aspirado": egresado.get("cargo_aspirado"),
         "recomendaciones": db.obtener_recomendaciones(egresado["id"]),
+    }
+
+
+# ------------------------------------------------------------------ registro nuevo (web/)
+def _recomendacion_para_web(r: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "position": r["posicion"],
+        "programId": r["programa_id"],
+        "programName": r["programa_nombre"],
+        "programType": r.get("tipo_programa"),
+        "score": float(r["puntaje"]),
+        "reasons": r["razones"],
+        "url": r.get("url"),
+    }
+
+
+@app.post("/api/registros")
+def crear_registro(registro: RegistroEgresado) -> dict[str, Any]:
+    programas = db.listar_programas(solo_activos=False)
+    programa = registro.profile.program
+    if programa != PROGRAMA_OTRO and programa not in {str(p["id"]) for p in programas}:
+        raise HTTPException(422, "El programa cursado no está en el catálogo.")
+
+    guardado = db.guardar_registro(registro, VERSION_REGISTRO)
+    activos = [p for p in programas if p.get("activo", True)]
+    sugeridas = recomendar(perfil_para_recomendador(registro, activos), activos)
+    db.guardar_recomendaciones_registro(guardado["id"], sugeridas)
+    return {
+        "registrationId": guardado["token"],
+        "receivedAt": datetime.now(timezone.utc).isoformat(),
+        "recommendations": [_recomendacion_para_web(r) for r in sugeridas],
+    }
+
+
+@app.get("/api/registros/{token}/recomendaciones")
+def ver_recomendaciones_registro(token: str) -> dict[str, Any]:
+    try:
+        uuid.UUID(token)
+    except ValueError:
+        raise HTTPException(404, "No encontramos ese registro.")
+    datos = db.obtener_recomendaciones_registro(token)
+    if not datos:
+        raise HTTPException(404, "No encontramos ese registro.")
+    return {
+        "name": datos["nombre"],
+        "targetRole": datos["cargo_aspirado"],
+        "recommendations": [_recomendacion_para_web(r) for r in datos["recomendaciones"]],
     }
 
 
