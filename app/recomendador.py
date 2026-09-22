@@ -66,38 +66,69 @@ def tipo_programa(programa: dict[str, Any]) -> str:
     return "posgrado"
 
 
+# Skills que aparecen en casi todos los programas del catalogo y no distinguen
+# uno de otro. Se ignoran al comparar.
+SKILLS_GENERICAS = {
+    normalizar(s) for s in (
+        "análisis", "gestión", "estrategia", "diseño", "evaluación", "evaluacion", "investigación",
+        "innovación", "innovacion", "seguimiento", "implementación", "formulación", "control",
+        "planificación", "planificacion", "planeacion", "toma de decisiones", "gestion de calidad",
+        "diagnóstico", "interpretación", "moodle", "excel",
+    )
+}
+
+# Cuanto puede aportar, como maximo, el texto largo de campo laboral/descripcion.
+# Ese texto enumera muchos cargos y sectores, asi que por si solo no basta.
+TOPE_CONTEXTO = 0.4
+
+
 @dataclass
 class _ProgramaIndexado:
     datos: dict[str, Any]
     tipo: str
     nombre_norm: str
-    texto_norm: str
-    tokens: set[str] = field(default_factory=set)
+    nucleo_norm: str      # nombre + rol + skills especificas: lo que define al programa
+    contexto_norm: str    # campo laboral + descripcion: texto largo y promocional
+    tokens_nombre: set[str] = field(default_factory=set)
+    tokens_nucleo: set[str] = field(default_factory=set)
+    tokens_contexto: set[str] = field(default_factory=set)
 
 
 def _indexar(programa: dict[str, Any]) -> _ProgramaIndexado:
-    partes = [
-        programa.get("nombre"), programa.get("descripcion"), programa.get("rol"),
-        programa.get("campo_laboral"), programa.get("facultad"),
-        " ".join(programa.get("dominios") or []), " ".join(programa.get("skills") or []),
-    ]
-    texto = normalizar(" ".join(p for p in partes if p))
+    skills = [s for s in (programa.get("skills") or []) if normalizar(s) not in SKILLS_GENERICAS]
+    nucleo = normalizar(" | ".join(
+        p for p in [programa.get("nombre"), programa.get("rol"), " | ".join(skills)] if p
+    ))
+    contexto = normalizar(" ".join(
+        p for p in [programa.get("campo_laboral"), programa.get("descripcion"), programa.get("facultad"),
+                    " ".join(programa.get("dominios") or [])] if p
+    ))
     return _ProgramaIndexado(
         datos=programa,
         tipo=tipo_programa(programa),
         nombre_norm=normalizar(programa.get("nombre")),
-        texto_norm=texto,
-        tokens=tokens(texto),
+        nucleo_norm=nucleo,
+        contexto_norm=contexto,
+        tokens_nombre=tokens(programa.get("nombre")),
+        tokens_nucleo=tokens(nucleo),
+        tokens_contexto=tokens(contexto),
     )
 
 
-def _afinidad_catalogo(prog: _ProgramaIndexado, item: dict[str, Any]) -> float:
-    """0..1: que tanto se relaciona el programa con un area/sector/habilidad."""
+def _afinidad_catalogo(prog: _ProgramaIndexado, item: dict[str, Any], tope_contexto: float = TOPE_CONTEXTO) -> float:
+    """0..1: que tanto se relaciona el programa con un area/sector/habilidad.
+
+    Coincidir en el nombre vale 1 (es lo mas distintivo). Cada coincidencia en
+    el nucleo (rol y skills especificas) vale 0.5, hasta 0.8. Las del texto
+    largo valen 0.2 cada una, con tope. Asi un programa cuyo nombre es el area
+    siempre queda por encima de uno que solo la toca en sus skills.
+    """
     claves = _claves_normalizadas(item)
     if contiene_alguna(prog.nombre_norm, claves):
         return 1.0
-    aciertos = len(contiene_alguna(prog.texto_norm, claves))
-    return min(1.0, aciertos / 2)
+    en_nucleo = set(contiene_alguna(prog.nucleo_norm, claves))
+    en_contexto = set(contiene_alguna(prog.contexto_norm, claves)) - en_nucleo
+    return min(0.9, min(0.8, 0.5 * len(en_nucleo)) + min(tope_contexto, 0.2 * len(en_contexto)))
 
 
 def _componente_area(prog, perfil) -> tuple[float, list[str]]:
@@ -116,22 +147,26 @@ def _componente_area(prog, perfil) -> tuple[float, list[str]]:
 def _componente_cargo_habilidades(prog, perfil) -> tuple[float, list[str]]:
     razones: list[str] = []
 
-    # Cargo aspirado (texto libre): palabras del cargo que aparecen en el programa
+    # Cargo aspirado (texto libre). Una palabra del cargo en el nucleo del
+    # programa vale 1; si solo aparece en el texto largo, vale 0.35.
     tokens_cargo = tokens(perfil.get("cargo_aspirado"))
     puntaje_cargo = None
     if tokens_cargo:
-        comunes = tokens_cargo & prog.tokens
-        por_palabras = len(comunes) / len(tokens_cargo)
-        puntaje_cargo = por_palabras
+        fuertes = tokens_cargo & prog.tokens_nucleo
+        debiles = (tokens_cargo & prog.tokens_contexto) - fuertes
+        puntaje_cargo = min(1.0, (len(fuertes) + 0.35 * len(debiles)) / len(tokens_cargo))
         # Credito parcial si el cargo apunta a un area que el programa cubre
-        # (p. ej. "director de ventas" -> comercial), sin afirmar que prepara para el cargo.
+        # (p. ej. "director de ventas" -> comercial).
         cargo_norm = normalizar(perfil.get("cargo_aspirado"))
         for item in AREAS_DESEMPENO:
             if contiene_alguna(cargo_norm, _claves_normalizadas(item)) and _afinidad_catalogo(prog, item) >= 0.5:
                 puntaje_cargo = max(puntaje_cargo, 0.4)
                 break
-        # Solo se afirma "prepara para el cargo" si coinciden todas (o casi todas) sus palabras
-        if por_palabras >= 0.99 or (len(tokens_cargo) >= 3 and por_palabras >= 0.66):
+        # Solo se afirma "prepara para el cargo" con evidencia clara: todas las
+        # palabras del cargo en el nucleo, o alguna en el nombre del programa y
+        # el resto en su descripcion de campo laboral.
+        todas = tokens_cargo <= (prog.tokens_nucleo | prog.tokens_contexto)
+        if tokens_cargo <= prog.tokens_nucleo or (todas and tokens_cargo & prog.tokens_nombre):
             razones.append(f"Prepara para el cargo al que aspiras ({perfil['cargo_aspirado'].strip()}).")
 
     # Habilidades que quiere fortalecer
@@ -179,7 +214,7 @@ def _componente_sector(prog, perfil) -> tuple[float, list[str]]:
         item = _SECTORES.get(valor)
         if not item:
             continue
-        afinidad = _afinidad_catalogo(prog, item)
+        afinidad = _afinidad_catalogo(prog, item, tope_contexto=0.6)
         if afinidad > mejor:
             mejor, etiqueta = afinidad, item["etiqueta"]
     razones = [f"Tiene salida en el sector {etiqueta.lower()}."] if mejor >= 0.5 else []

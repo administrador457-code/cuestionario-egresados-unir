@@ -121,3 +121,52 @@ def test_api_exige_aceptar_tratamiento_de_datos(cliente):
 
 def test_api_token_invalido(cliente):
     assert cliente.get("/api/egresados/123/recomendaciones").status_code == 404
+
+
+# ------------------------------------------------ catalogo real (muestra)
+# Extractos del catalogo real sincronizado (sept. 2026). El texto de campo
+# laboral enumera muchos cargos y sectores; estas pruebas evitan que eso infle
+# las recomendaciones (p. ej. Gestion Publica para un gerente comercial).
+REALES = json.loads((Path(__file__).parent / "programas_reales_muestra.json").read_text(encoding="utf-8"))
+
+
+def _nombres(perfil):
+    return [r["programa_nombre"] for r in recomendar(perfil, REALES)]
+
+
+def test_real_gerente_comercial():
+    nombres = _nombres(MARIA)
+    assert nombres[0] == "Especialización en Dirección Comercial y Ventas"
+    assert "Especialización en Marketing Digital" in nombres[:3]
+    assert "Especialización en Gestión Pública" not in nombres[:3]
+
+
+def test_real_analista_de_datos():
+    perfil = dict(MARIA, cargo_aspirado="analista de datos", areas_interes=["datos_ia", "tecnologia"],
+                  sectores_interes=["financiero"], tipo_formacion="sin_definir",
+                  habilidades_fortalecer=["analisis_datos", "ia"])
+    recs = recomendar(perfil, REALES)
+    top3 = [r["programa_nombre"] for r in recs[:3]]
+    assert set(top3) == {"Especialización en Inteligencia de Negocio", "Especialización en Inteligencia Artificial",
+                         "Especialización en Visual Analytics y Big Data"}
+    derecho = [r for r in recs if r["programa_nombre"] == "Especialización en Derecho Digital"]
+    assert not derecho or not any("cargo al que aspiras" in x for x in derecho[0]["razones"])
+
+
+def test_real_coordinadora_academica():
+    perfil = dict(MARIA, cargo_aspirado="coordinadora académica", areas_interes=["educacion"],
+                  sectores_interes=["educacion"], tipo_formacion="maestria",
+                  habilidades_fortalecer=["investigacion", "pedagogia_digital", "liderazgo"])
+    nombres = _nombres(perfil)
+    assert nombres[:2] == ["Especialización en Pedagogía y Docencia", "Especialización en Gerencia Educativa"]
+    # Derechos Humanos toca la pedagogia en sus skills, pero no puede superar a los programas de educacion
+    if "Especialización en Derechos Humanos" in nombres:
+        assert nombres.index("Especialización en Derechos Humanos") > 1
+
+
+def test_skills_genericas_no_cuentan_como_habilidad():
+    # "investigación" aparece en todos los programas: no debe "fortalecer investigación" en cualquiera
+    perfil = dict(MARIA, habilidades_fortalecer=["investigacion"])
+    for r in recomendar(perfil, REALES, limite=20):
+        if r["programa_nombre"] == "Especialización en Dirección Comercial y Ventas":
+            assert not any("investigación" in x for x in r["razones"])

@@ -102,17 +102,21 @@ base vacía de pruebas también se prueba la API).
 
 ## Despliegue en Railway
 
-1. **Postgres nuevo** para el cuestionario (no reutilizar ninguna base existente).
-2. **Servicio web** desde este repo. `railway.json` ya define el arranque y el
-   healthcheck. Variables: `DATABASE_URL` (referencia al Postgres nuevo).
-3. **Servicio cron de sincronización** desde el mismo repo, con comando
-   `python scripts/sincronizar_programas.py` y horario diario (p. ej. `0 6 * * *`).
-   Variables: `DATABASE_URL` y `PROGRAMAS_DATABASE_URL`.
+Proyecto de Railway `app-desarrollo-egresados-unir` (su `postgres` original no se usa):
 
-`PROGRAMAS_DATABASE_URL` va **solo** en el servicio cron, no en el web. El
-script fuerza `default_transaction_read_only=on`, pero la credencial en sí
-sigue teniendo los permisos que tenga en la plataforma; lo ideal a futuro es
-un usuario de solo lectura creado por quien administra esa base.
+| Servicio | Qué es | Configuración |
+|---|---|---|
+| `Postgres` | Base propia del cuestionario | Plantilla de Railway |
+| `cuestionario-web` | API + frontend | Arranque `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/api/health`. Variable `DATABASE_URL=${{Postgres.DATABASE_URL}}` |
+| `cuestionario-sync` | Sincronización diaria del catálogo | Comando `python scripts/sincronizar_programas.py`, cron `0 11 * * *` (6 a. m. Colombia), reinicio `NEVER`. Variables `DATABASE_URL` y `PROGRAMAS_DATABASE_URL` |
+
+La configuración vive en cada servicio de Railway (no hay `railway.json` en
+el repo). Cada `git push` a `main` redespliega los dos servicios.
+
+`PROGRAMAS_DATABASE_URL` va **solo** en `cuestionario-sync`. El script fuerza
+`default_transaction_read_only=on`, pero la credencial en sí conserva los
+permisos que tenga en la plataforma; lo ideal a futuro es un usuario de solo
+lectura creado por quien administra esa base.
 
 El frontend lo sirve el mismo servicio web. Si algún día se publica aparte
 (por ejemplo en Vercel), edita `frontend/config.js` con la URL del backend y
