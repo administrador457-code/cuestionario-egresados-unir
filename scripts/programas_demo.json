@@ -1,0 +1,195 @@
+[
+ {
+  "id": 1,
+  "nombre": "Especialización en Gerencia Comercial",
+  "nivel": "Posgrado",
+  "facultad": "Ciencias Empresariales",
+  "rol": "Gerente comercial, director de ventas",
+  "campo_laboral": "Dirección de equipos comerciales en empresas de comercio y servicios",
+  "skills": [
+   "Negociación",
+   "Marketing digital",
+   "Liderazgo de equipos",
+   "Planeación estratégica",
+   "CRM"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 2,
+  "nombre": "Maestría en Dirección y Administración de Empresas (MBA)",
+  "nivel": "Posgrado",
+  "facultad": "Ciencias Empresariales",
+  "rol": "Gerente general, director de unidad de negocio",
+  "campo_laboral": "Alta dirección en organizaciones públicas y privadas",
+  "skills": [
+   "Estrategia",
+   "Finanzas corporativas",
+   "Liderazgo",
+   "Toma de decisiones",
+   "Innovación"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 3,
+  "nombre": "Especialización en Gerencia de Proyectos",
+  "nivel": "Posgrado",
+  "facultad": "Ingeniería",
+  "rol": "Director de proyectos, PMO",
+  "campo_laboral": "Consultoría y gestión de proyectos en cualquier sector",
+  "skills": [
+   "Gestión de proyectos",
+   "Scrum",
+   "Presupuesto",
+   "Gestión de riesgos"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 4,
+  "nombre": "Maestría en Educación",
+  "nivel": "Posgrado",
+  "facultad": "Educación",
+  "rol": "Docente investigador, coordinador académico",
+  "campo_laboral": "Instituciones educativas de básica y superior",
+  "skills": [
+   "Pedagogía",
+   "Investigación educativa",
+   "Didáctica",
+   "Currículo"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 5,
+  "nombre": "Especialización en Analítica de Datos",
+  "nivel": "Posgrado",
+  "facultad": "Ingeniería",
+  "rol": "Analista de datos, científico de datos",
+  "campo_laboral": "Empresas de tecnología, banca y retail",
+  "skills": [
+   "Python",
+   "SQL",
+   "Power BI",
+   "Estadística",
+   "Machine learning"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 6,
+  "nombre": "Maestría en Ciberseguridad",
+  "nivel": "Posgrado",
+  "facultad": "Ingeniería",
+  "rol": "Líder de seguridad de la información",
+  "campo_laboral": "Banca, telecomunicaciones y sector público",
+  "skills": [
+   "Seguridad de la información",
+   "Hacking ético",
+   "Forense digital",
+   "Normatividad"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 7,
+  "nombre": "Especialización en Gestión del Talento Humano",
+  "nivel": "Posgrado",
+  "facultad": "Ciencias Empresariales",
+  "rol": "Director de gestión humana",
+  "campo_laboral": "Áreas de recursos humanos en cualquier sector",
+  "skills": [
+   "Selección",
+   "Cultura organizacional",
+   "Liderazgo",
+   "Gestión del cambio"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 8,
+  "nombre": "Especialización en Finanzas",
+  "nivel": "Posgrado",
+  "facultad": "Ciencias Empresariales",
+  "rol": "Analista financiero, gerente financiero",
+  "campo_laboral": "Banca, seguros y áreas financieras",
+  "skills": [
+   "Finanzas",
+   "Evaluación financiera",
+   "Presupuesto",
+   "Riesgo"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 9,
+  "nombre": "Maestría en Seguridad y Salud en el Trabajo",
+  "nivel": "Posgrado",
+  "facultad": "Salud",
+  "rol": "Coordinador SG-SST",
+  "campo_laboral": "Industria, construcción y salud",
+  "skills": [
+   "SG-SST",
+   "Riesgos laborales",
+   "Ergonomía",
+   "Normatividad"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ },
+ {
+  "id": 10,
+  "nombre": "Especialización en Marketing Digital",
+  "nivel": "Posgrado",
+  "facultad": "Comunicación",
+  "rol": "Gerente de marketing digital",
+  "campo_laboral": "Comercio, ecommerce y agencias",
+  "skills": [
+   "Marketing digital",
+   "SEO",
+   "Redes sociales",
+   "Analítica web"
+  ],
+  "dominios": [],
+  "descripcion": null,
+  "modalidad": "Virtual",
+  "source_url": null,
+  "estado": "Activo"
+ }
+]

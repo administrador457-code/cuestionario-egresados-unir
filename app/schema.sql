@@ -1,0 +1,66 @@
+-- Esquema de la base de datos PROPIA del cuestionario de egresados.
+-- Se aplica sobre DATABASE_URL (nunca sobre la base de la plataforma de
+-- pertinencia ni sobre la de la app de desarrollo). Es idempotente.
+
+-- Copia de solo lectura del catalogo de programas UNIR. La llena
+-- scripts/sincronizar_programas.py leyendo la tabla `especializaciones`.
+CREATE TABLE IF NOT EXISTS programas_unir (
+    id              INTEGER PRIMARY KEY,          -- especializaciones.id en el origen
+    nombre          TEXT NOT NULL,
+    descripcion     TEXT,
+    facultad        TEXT,
+    nivel           TEXT,
+    modalidad       TEXT,
+    rol             TEXT,
+    campo_laboral   TEXT,
+    source_url      TEXT,
+    skills          TEXT[] NOT NULL DEFAULT '{}',  -- skills + competencias + herramientas
+    dominios        TEXT[] NOT NULL DEFAULT '{}',
+    activo          BOOLEAN NOT NULL DEFAULT TRUE,
+    sincronizado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS egresados (
+    id                        BIGSERIAL PRIMARY KEY,
+    token                     UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),  -- id publico para la URL
+    nombre                    TEXT NOT NULL,
+    email                     TEXT NOT NULL UNIQUE,
+    acepta_tratamiento_datos  BOOLEAN NOT NULL,
+    aceptado_en               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    creado_en                 TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Una fila por egresado con las 10 respuestas. Si vuelve a responder, se
+-- actualiza (y queda la version del cuestionario con la que respondio).
+CREATE TABLE IF NOT EXISTS perfil_egresado (
+    egresado_id             BIGINT PRIMARY KEY REFERENCES egresados(id) ON DELETE CASCADE,
+    version_cuestionario    INTEGER NOT NULL,
+    situacion_laboral       TEXT NOT NULL,
+    nivel_formacion         TEXT NOT NULL,
+    programa_egreso_id      INTEGER,               -- NULL si su programa no esta en la lista
+    cargo_aspirado          TEXT NOT NULL,
+    areas_interes           TEXT[] NOT NULL,
+    sectores_interes        TEXT[] NOT NULL,
+    tipo_formacion          TEXT NOT NULL,
+    habilidades_fortalecer  TEXT[] NOT NULL,
+    horizonte_meta          TEXT NOT NULL,
+    horas_semanales         TEXT NOT NULL,
+    respondido_en           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    actualizado_en          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS recomendaciones (
+    id               BIGSERIAL PRIMARY KEY,
+    egresado_id      BIGINT NOT NULL REFERENCES egresados(id) ON DELETE CASCADE,
+    posicion         INTEGER NOT NULL,
+    programa_id      INTEGER NOT NULL,
+    programa_nombre  TEXT NOT NULL,
+    puntaje          NUMERIC(5, 1) NOT NULL,
+    desglose         JSONB NOT NULL DEFAULT '{}'::jsonb,
+    razones          JSONB NOT NULL DEFAULT '[]'::jsonb,
+    generado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_recomendaciones_egresado ON recomendaciones (egresado_id, posicion);
+CREATE INDEX IF NOT EXISTS idx_perfil_areas ON perfil_egresado USING GIN (areas_interes);
+CREATE INDEX IF NOT EXISTS idx_perfil_tipo_formacion ON perfil_egresado (tipo_formacion);
