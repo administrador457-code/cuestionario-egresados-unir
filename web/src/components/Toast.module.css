@@ -1,0 +1,48 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 20;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--blanco);
+  font-size: var(--texto-pequeno);
+  box-shadow: var(--sombra);
+  animation: aparecer 0.2s ease-out;
+}
+
+.toast svg {
+  flex-shrink: 0;
+  color: #8fd3ad;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* En escritorio, esquina inferior derecha para no tapar los botones del formulario. */
+@media (min-width: 901px) {
+  .region {
+    left: auto;
+    right: 1.5rem;
+    transform: none;
+  }
+}

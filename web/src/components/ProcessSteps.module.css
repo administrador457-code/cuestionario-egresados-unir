@@ -1,0 +1,146 @@
+/* Escritorio: panel lateral oscuro con las etapas en vertical. */
+.panel {
+  height: 100%;
+  padding: 2.5rem 1.75rem;
+  background: var(--panel);
+  color: var(--panel-texto);
+}
+
+.titulo {
+  margin-bottom: 2rem;
+  font-family: var(--fuente-titulo);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--blanco);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.375rem;
+}
+
+.paso {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.875rem;
+  align-items: start;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radio);
+}
+
+.marcador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid #57525e;
+  font-weight: 700;
+  font-size: var(--texto-pequeno);
+  color: var(--panel-tenue);
+}
+
+.textos {
+  display: grid;
+  gap: 0.125rem;
+  padding-top: 0.2rem;
+}
+
+.nombrePaso {
+  font-weight: 600;
+  color: var(--blanco);
+}
+
+.detalle {
+  font-size: var(--texto-pequeno);
+  color: var(--panel-tenue);
+}
+
+.actual {
+  background: rgba(200, 16, 46, 0.16);
+  box-shadow: inset 3px 0 0 var(--rojo);
+}
+
+.actual .marcador {
+  border-color: var(--rojo);
+  background: var(--rojo);
+  color: var(--blanco);
+}
+
+.completa .marcador {
+  border-color: var(--verde);
+  background: var(--verde);
+  color: var(--blanco);
+}
+
+.pendiente .nombrePaso {
+  color: var(--panel-texto);
+}
+
+/* Tableta y celular: indicador horizontal compacto debajo del encabezado. */
+@media (max-width: 900px) {
+  .panel {
+    height: auto;
+    padding: 0.75rem clamp(1rem, 3vw, 2rem);
+    background: var(--blanco);
+    color: var(--texto);
+    border-bottom: 1px solid var(--borde);
+  }
+
+  .titulo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .paso {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+  }
+
+  .marcador {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-color: var(--borde-fuerte);
+    color: var(--texto-secundario);
+  }
+
+  .textos {
+    padding-top: 0;
+  }
+
+  .nombrePaso,
+  .pendiente .nombrePaso {
+    color: var(--texto);
+    font-size: var(--texto-pequeno);
+    line-height: 1.25;
+  }
+
+  .detalle {
+    display: none;
+  }
+
+  .actual {
+    background: var(--rojo-suave);
+    box-shadow: inset 0 -3px 0 var(--rojo);
+  }
+
+  .actual .nombrePaso {
+    color: var(--rojo-oscuro);
+  }
+}

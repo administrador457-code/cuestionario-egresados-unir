@@ -1,0 +1,123 @@
+.formulario {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.nota {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}
+
+.resumenErrores {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--rojo);
+  border-radius: 6px;
+  background: var(--rojo-suave);
+  color: var(--rojo-oscuro);
+  font-weight: 600;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 1.25rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ancho {
+  grid-column: 1 / -1;
+}
+
+.etiqueta {
+  margin-bottom: 0.375rem;
+  font-size: var(--texto-etiqueta);
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.control {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--borde-fuerte);
+  border-radius: var(--radio-control);
+  background-color: var(--blanco);
+  font-size: var(--texto-base);
+  transition: border-color 0.12s;
+}
+
+.control:hover {
+  border-color: var(--texto-secundario);
+}
+
+.control:focus-visible {
+  border-color: var(--rojo-oscuro);
+}
+
+.control[aria-invalid="true"] {
+  border-color: var(--rojo);
+  background-color: #fffbfc;
+}
+
+.lista {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23686772' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1rem;
+  text-overflow: ellipsis;
+}
+
+.pista {
+  margin-top: 0.375rem;
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}
+
+.consentimiento {
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo);
+}
+
+.casilla {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.casilla input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--rojo);
+  cursor: pointer;
+}
+
+.casilla label {
+  font-size: var(--texto-etiqueta);
+  cursor: pointer;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .rejilla {
+    grid-template-columns: 1fr;
+  }
+
+  .acciones > * {
+    width: 100%;
+  }
+}

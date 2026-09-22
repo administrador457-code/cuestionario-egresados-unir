@@ -1,0 +1,59 @@
+.opcion {
+  position: relative;
+}
+
+/* El radio nativo queda oculto a la vista pero accesible. */
+.radio {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  left: 1.25rem;
+  top: 50%;
+}
+
+.tarjeta {
+  display: grid;
+  grid-template-columns: 1.375rem 1fr;
+  gap: 0.875rem;
+  align-items: center;
+  min-height: 56px;
+  padding: 0.875rem 1.125rem;
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--blanco);
+  cursor: pointer;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+
+.tarjeta:hover {
+  border-color: var(--borde-fuerte);
+}
+
+.indicador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  border: 2px solid var(--borde-fuerte);
+  background: var(--blanco);
+  color: var(--blanco);
+}
+
+.radio:checked + .tarjeta {
+  border-color: var(--rojo);
+  background: var(--rojo-suave);
+  font-weight: 600;
+}
+
+.radio:checked + .tarjeta .indicador {
+  border-color: var(--rojo);
+  background: var(--rojo);
+}
+
+.radio:focus-visible + .tarjeta {
+  box-shadow: var(--foco);
+}

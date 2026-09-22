@@ -1,0 +1,31 @@
+/* Tokens de diseño: paleta institucional UNIR y escala tipográfica. */
+:root {
+  --rojo: #c8102e;
+  --rojo-oscuro: #8b0b20;
+  --rojo-suave: #f9edf0;
+  --fondo: #f6f5f7;
+  --panel: #26232a;
+  --panel-texto: #d9d6dd;
+  --panel-tenue: #a19ca8;
+  --texto: #222128;
+  --texto-secundario: #686772;
+  --borde: #e5e3e7;
+  --borde-fuerte: #c9c6ce;
+  --blanco: #ffffff;
+  --verde: #196b45;
+  --verde-suave: #e8f3ed;
+
+  --fuente-texto: "DM Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --fuente-titulo: "Newsreader", Georgia, "Times New Roman", serif;
+
+  --texto-base: 1rem;       /* 16 px mínimo para el cuerpo */
+  --texto-etiqueta: 0.9375rem; /* 15 px, por encima del mínimo de 14 px */
+  --texto-pequeno: 0.875rem;
+
+  --radio-grande: 16px;
+  --radio: 12px;
+  --radio-control: 10px;
+  --sombra: 0 1px 2px rgba(38, 35, 42, 0.06), 0 8px 24px -12px rgba(38, 35, 42, 0.18);
+  --foco: 0 0 0 3px var(--blanco), 0 0 0 5px var(--rojo-oscuro);
+  --alto-encabezado: 64px;
+}

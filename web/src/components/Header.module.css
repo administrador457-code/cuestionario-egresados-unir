@@ -1,0 +1,55 @@
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: var(--alto-encabezado);
+  padding: 0.5rem clamp(1rem, 3vw, 2rem);
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+  background: var(--blanco);
+  border-bottom: 1px solid var(--borde);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.sigla {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  background: var(--rojo);
+  color: var(--blanco);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: 0.06em;
+}
+
+.nombre {
+  font-weight: 500;
+  color: var(--texto);
+}
+
+.ayuda {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: var(--texto-pequeno);
+  text-underline-offset: 3px;
+  border-radius: 4px;
+  padding: 0.5rem 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .nombre {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

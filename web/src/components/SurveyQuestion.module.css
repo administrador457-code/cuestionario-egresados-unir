@@ -1,0 +1,79 @@
+.bloque {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.leyenda {
+  padding: 0;
+  float: left; /* hace que la leyenda se comporte como un bloque normal dentro de la rejilla */
+  width: 100%;
+}
+
+.leyenda + * {
+  clear: both;
+}
+
+.etiquetaPregunta {
+  display: block;
+}
+
+.pregunta {
+  font-size: clamp(1.5rem, 3.2vw, 2rem);
+  line-height: 1.2;
+  color: var(--texto);
+}
+
+.numero {
+  color: var(--rojo);
+}
+
+.ayuda {
+  color: var(--texto-secundario);
+  max-width: 60ch;
+}
+
+.opciones {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+}
+
+.dosColumnas {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.texto {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--borde-fuerte);
+  border-radius: var(--radio-control);
+  background: var(--blanco);
+  font-size: 1.0625rem;
+}
+
+.texto:focus-visible {
+  border-color: var(--rojo-oscuro);
+}
+
+.texto::placeholder {
+  color: #8e8c97;
+}
+
+.contador {
+  justify-self: end;
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .dosColumnas {
+    grid-template-columns: 1fr;
+  }
+}

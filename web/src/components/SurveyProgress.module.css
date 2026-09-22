@@ -1,0 +1,37 @@
+.progreso {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.contador {
+  font-weight: 700;
+  color: var(--rojo-oscuro);
+}
+
+.respondidas {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+  align-self: center;
+}
+
+.barra {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--borde);
+  overflow: hidden;
+}
+
+.relleno {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rojo);
+  transition: width 0.25s ease;
+}

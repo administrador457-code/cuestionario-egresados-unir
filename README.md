@@ -46,6 +46,14 @@ maestría y el catálogo tiene de ese tipo, solo se consideran esos; y un
 programa sin afinidad real (área + cargo/habilidades + sector < 15) no se
 recomienda. Cada recomendación guarda sus razones en texto.
 
+## Frontend React de registro (`web/`)
+
+En `web/` está la nueva aplicación de registro y caracterización (React +
+TypeScript + Vite): datos del egresado, 10 preguntas una por pantalla,
+guardado temporal y confirmación. Por ahora el envío es simulado y no está
+publicada; el cuestionario en línea sigue siendo `frontend/`. Instrucciones en
+[`web/README.md`](web/README.md).
+
 ## Estructura
 
 ```
