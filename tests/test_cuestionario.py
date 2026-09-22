@@ -181,10 +181,13 @@ REGISTRO = {
         "privacyConsent": True,
     },
     "survey": {
-        "employmentStatus": "tiempo_completo", "targetRole": "Gerente comercial",
-        "preferredEducationType": "especializacion", "preferredPerformanceArea": "comercial_marketing",
-        "preferredEconomicSector": "comercio", "yearsOfExperience": "2_5", "prioritySkill": "negociacion",
-        "preferredModality": "virtual", "mainEducationBarrier": "tiempo", "preferredGraduateService": "mentorias",
+        "employmentStatus": ["tiempo_completo"], "targetRole": "Gerente comercial",
+        "preferredEducationType": ["especializacion"],
+        "preferredPerformanceArea": ["comercial_marketing", "direccion_empresas"],
+        "preferredEconomicSector": ["comercio"], "yearsOfExperience": "2_5",
+        "prioritySkill": ["negociacion", "liderazgo", "marketing_digital"],
+        "preferredModality": ["virtual", "virtual_en_vivo"], "mainEducationBarrier": ["tiempo", "costo"],
+        "preferredGraduateService": ["mentorias", "bolsa_empleo"],
     },
     "completedAt": "2026-09-22T18:00:00Z",
     "status": "completed",
@@ -203,13 +206,22 @@ def test_perfil_para_recomendador():
     from app.registro import RegistroEgresado, perfil_para_recomendador
 
     perfil = perfil_para_recomendador(RegistroEgresado.model_validate(REGISTRO), PROGRAMAS)
-    assert perfil["areas_interes"] == ["comercial_marketing"]
+    assert perfil["areas_interes"] == ["comercial_marketing", "direccion_empresas"]
+    assert perfil["tipo_formacion"] == ["especializacion"]
     assert perfil["nivel_formacion"] == "especializacion"  # el programa 3 del catalogo es especializacion
     assert perfil["programa_egreso"] == "3"
-    otra = RegistroEgresado.model_validate(_registro(survey__preferredPerformanceArea="otra",
+    otra = RegistroEgresado.model_validate(_registro(survey__preferredPerformanceArea=["otra", "finanzas"],
+                                                     survey__preferredEducationType=["diplomado", "maestria"],
                                                      profile__program="otro"))
     perfil_otra = perfil_para_recomendador(otra, PROGRAMAS)
-    assert perfil_otra["areas_interes"] == [] and perfil_otra["nivel_formacion"] == "profesional"
+    assert perfil_otra["areas_interes"] == ["finanzas"] and perfil_otra["nivel_formacion"] == "profesional"
+    assert perfil_otra["tipo_formacion"] == ["curso_corto", "maestria"]
+
+
+def test_varios_tipos_de_formacion_filtran_por_ambos():
+    perfil = dict(MARIA, tipo_formacion=["especializacion", "maestria"])
+    tipos = {r["tipo_programa"] for r in recomendar(perfil, PROGRAMAS, limite=20)}
+    assert tipos <= {"especializacion", "maestria"} and "maestria" in tipos
 
 
 def test_api_registro_nuevo(cliente):
@@ -230,7 +242,13 @@ def test_api_registro_nuevo(cliente):
 
 
 @pytest.mark.parametrize("cambios", [
-    {"survey__preferredPerformanceArea": "astronautica"},
+    {"survey__preferredPerformanceArea": ["astronautica"]},
+    {"survey__preferredPerformanceArea": []},
+    {"survey__preferredPerformanceArea": ["finanzas", "finanzas"]},
+    {"survey__preferredEconomicSector": ["salud", "educacion", "agro", "comercio"]},
+    {"survey__mainEducationBarrier": ["ninguna", "costo"]},
+    {"survey__preferredEducationType": ["ninguna", "maestria"]},
+    {"survey__yearsOfExperience": ["2_5"]},
     {"profile__privacyConsent": False},
     {"profile__phone": "12"},
     {"profile__documentNumber": "12.345"},

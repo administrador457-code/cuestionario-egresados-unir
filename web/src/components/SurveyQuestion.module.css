@@ -36,6 +36,16 @@
   max-width: 60ch;
 }
 
+.seleccion {
+  justify-self: start;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
 .opciones {
   display: grid;
   gap: 0.625rem;

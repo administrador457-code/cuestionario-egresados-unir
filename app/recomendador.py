@@ -185,13 +185,20 @@ def _componente_cargo_habilidades(prog, perfil) -> tuple[float, list[str]]:
     return (sum(partes) / len(partes) if partes else 0.0), razones
 
 
+def _tipos_preferidos(perfil) -> set[str]:
+    """tipo_formacion puede ser un texto (cuestionario anterior) o una lista (registro nuevo)."""
+    valor = perfil.get("tipo_formacion")
+    tipos = set(valor) if isinstance(valor, (list, tuple, set)) else {valor}
+    return tipos & {"especializacion", "maestria", "doctorado", "curso_corto"}
+
+
 def _componente_formacion(prog, perfil) -> tuple[float, list[str]]:
     razones: list[str] = []
-    preferido = perfil.get("tipo_formacion")
+    preferidos = _tipos_preferidos(perfil)
 
-    if preferido in ("especializacion", "maestria", "curso_corto"):
-        coincide_tipo = 1.0 if prog.tipo == preferido else (0.4 if prog.tipo in ORDEN_TIPO else 0.2)
-        if prog.tipo == preferido:
+    if preferidos:
+        coincide_tipo = 1.0 if prog.tipo in preferidos else (0.4 if prog.tipo in ORDEN_TIPO else 0.2)
+        if prog.tipo in preferidos:
             razones.append("Es el tipo de formación que buscas.")
     else:  # sin_definir o ninguna: no penaliza el tipo
         coincide_tipo = 0.7
@@ -259,11 +266,11 @@ def recomendar(perfil: dict[str, Any], programas: list[dict[str, Any]], limite: 
         if p.get("activo", True) and str(p.get("id")) != excluido
     ]
 
-    # Si el egresado pidio especializacion o maestria y hay programas de ese
-    # tipo, solo se consideran esos. Si no hay ninguno, se sigue con todos.
-    preferido = perfil.get("tipo_formacion")
-    if preferido in ("especializacion", "maestria"):
-        del_tipo = [c for c in candidatos if c.tipo == preferido]
+    # Si el egresado pidio especializacion y/o maestria y hay programas de esos
+    # tipos, solo se consideran esos. Si no hay ninguno, se sigue con todos.
+    preferidos = _tipos_preferidos(perfil) & {"especializacion", "maestria"}
+    if preferidos:
+        del_tipo = [c for c in candidatos if c.tipo in preferidos]
         if del_tipo:
             candidatos = del_tipo
 

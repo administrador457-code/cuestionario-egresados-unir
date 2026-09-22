@@ -88,5 +88,29 @@ export function firstInvalidField(errors: ProfileErrors): ProfileField | undefin
 export function isQuestionAnswered(question: SurveyQuestionConfig, answers: SurveyAnswers): boolean {
   const value = answers[question.id];
   if (question.type === "text") return typeof value === "string" && value.trim().length > 0;
+  if (question.type === "multiple") {
+    if (!Array.isArray(value) || value.length === 0) return false;
+    const valid = value.every((item) => question.options.some((option) => option.value === item));
+    const withinMax = question.maxSelections === undefined || value.length <= question.maxSelections;
+    return valid && withinMax;
+  }
   return typeof value === "string" && question.options.some((option) => option.value === value);
+}
+
+/**
+ * Marca o desmarca una opción de una pregunta múltiple respetando las
+ * opciones excluyentes (p. ej. "No tengo barreras" borra las demás y al
+ * revés) y el máximo permitido.
+ */
+export function toggleMultipleValue(
+  question: { maxSelections?: number; exclusiveValues?: string[] },
+  current: string[],
+  value: string,
+): string[] {
+  if (current.includes(value)) return current.filter((item) => item !== value);
+  const exclusive = question.exclusiveValues ?? [];
+  if (exclusive.includes(value)) return [value];
+  const next = [...current.filter((item) => !exclusive.includes(item)), value];
+  if (question.maxSelections !== undefined && next.length > question.maxSelections) return current;
+  return next;
 }

@@ -6,17 +6,20 @@ import type { SurveyQuestionConfig } from "../types/graduate";
  * Los `value` son estables: son lo que se guardará en la base de datos.
  * Cambiar un `label` no afecta nada; cambiar o eliminar un `value` sí.
  *
+ * Todas son de selección múltiple ("multiple") salvo el cargo (texto) y los
+ * años de experiencia (una sola opción). Máximos y opciones excluyentes deben
+ * coincidir con app/registro.py en el backend, que valida lo mismo.
+ *
  * Áreas (4), sectores (5) y competencias (7) usan los mismos valores que el
- * recomendador de programas del backend (app/preguntas.py), para que al
- * conectar la API las respuestas se crucen directamente con el catálogo UNIR.
+ * recomendador de programas del backend, así se cruzan con el catálogo UNIR.
  */
 export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   {
     id: "employmentStatus",
-    type: "choice",
+    type: "multiple",
     shortLabel: "Situación laboral",
     text: "¿Cuál es tu situación laboral actual?",
-    help: "Elige la opción que mejor describe tu situación hoy.",
+    help: "Puedes marcar varias si aplica, por ejemplo si trabajas y además emprendes.",
     options: [
       { value: "tiempo_completo", label: "Trabajo a tiempo completo" },
       { value: "tiempo_parcial", label: "Trabajo a tiempo parcial" },
@@ -36,10 +39,11 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "preferredEducationType",
-    type: "choice",
+    type: "multiple",
     shortLabel: "Formación de interés",
     text: "¿Qué tipo de formación te interesa continuar?",
-    help: "Piensa en tu siguiente paso de formación, aunque no sea inmediato.",
+    help: "Puedes marcar varias. Piensa en tus siguientes pasos de formación, aunque no sean inmediatos.",
+    exclusiveValues: ["ninguna"],
     options: [
       { value: "curso_corto", label: "Curso corto o certificación" },
       { value: "diplomado", label: "Diplomado o programa de experto" },
@@ -51,10 +55,11 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "preferredPerformanceArea",
-    type: "choice",
-    shortLabel: "Área de desempeño",
-    text: "¿En cuál área de desempeño te visualizas?",
-    help: "Elige la que más se acerque a lo que quieres hacer en los próximos años.",
+    type: "multiple",
+    shortLabel: "Áreas de desempeño",
+    text: "¿En cuáles áreas de desempeño te visualizas?",
+    help: "Elige hasta 3, las que más se acerquen a lo que quieres hacer en los próximos años.",
+    maxSelections: 3,
     options: [
       { value: "direccion_empresas", label: "Dirección y gestión de organizaciones" },
       { value: "finanzas", label: "Finanzas y contabilidad" },
@@ -75,10 +80,11 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "preferredEconomicSector",
-    type: "choice",
-    shortLabel: "Sector económico",
-    text: "¿En cuál sector económico te gustaría trabajar?",
-    help: "Si dudas entre varios, elige el que más te atrae.",
+    type: "multiple",
+    shortLabel: "Sectores económicos",
+    text: "¿En cuáles sectores económicos te gustaría trabajar?",
+    help: "Elige hasta 3.",
+    maxSelections: 3,
     options: [
       { value: "tecnologia", label: "Tecnología y telecomunicaciones" },
       { value: "educacion", label: "Educación" },
@@ -112,10 +118,11 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "prioritySkill",
-    type: "choice",
-    shortLabel: "Competencia prioritaria",
-    text: "¿Qué competencia deseas fortalecer con mayor prioridad?",
-    help: "Elige la que más necesitas para llegar al cargo al que aspiras.",
+    type: "multiple",
+    shortLabel: "Competencias prioritarias",
+    text: "¿Qué competencias deseas fortalecer con mayor prioridad?",
+    help: "Elige hasta 3, las que más necesitas para llegar al cargo al que aspiras.",
+    maxSelections: 3,
     options: [
       { value: "liderazgo", label: "Liderazgo de equipos" },
       { value: "estrategia", label: "Pensamiento estratégico" },
@@ -138,10 +145,10 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "preferredModality",
-    type: "choice",
-    shortLabel: "Modalidad preferida",
-    text: "¿Qué modalidad de formación prefieres?",
-    help: "Piensa en cómo te resulta más fácil estudiar con tu rutina actual.",
+    type: "multiple",
+    shortLabel: "Modalidades preferidas",
+    text: "¿Qué modalidades de formación prefieres?",
+    help: "Puedes marcar varias.",
     options: [
       { value: "virtual", label: "100 % virtual" },
       { value: "virtual_en_vivo", label: "Virtual con sesiones en vivo" },
@@ -152,10 +159,11 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "mainEducationBarrier",
-    type: "choice",
-    shortLabel: "Principal barrera",
-    text: "¿Cuál es tu principal barrera para seguir formándote?",
-    help: "Saberlo nos ayuda a diseñar opciones que se ajusten a tu realidad.",
+    type: "multiple",
+    shortLabel: "Principales barreras",
+    text: "¿Cuáles son tus principales barreras para seguir formándote?",
+    help: "Puedes marcar varias. Saberlo nos ayuda a diseñar opciones que se ajusten a tu realidad.",
+    exclusiveValues: ["ninguna"],
     options: [
       { value: "costo", label: "Costo de la formación" },
       { value: "tiempo", label: "Falta de tiempo" },
@@ -167,10 +175,11 @@ export const SURVEY_QUESTIONS: SurveyQuestionConfig[] = [
   },
   {
     id: "preferredGraduateService",
-    type: "choice",
-    shortLabel: "Servicio más valioso",
-    text: "¿Qué servicio de UNIR sería más valioso para tu desarrollo?",
-    help: "Elige el que más usarías en los próximos meses.",
+    type: "multiple",
+    shortLabel: "Servicios más valiosos",
+    text: "¿Qué servicios de UNIR serían más valiosos para tu desarrollo?",
+    help: "Elige hasta 3, los que más usarías en los próximos meses.",
+    maxSelections: 3,
     options: [
       { value: "bolsa_empleo", label: "Bolsa de empleo y vacantes" },
       { value: "orientacion", label: "Orientación profesional" },

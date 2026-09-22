@@ -50,7 +50,11 @@ function hasProgress(profile: ProfileFormValues, answers: SurveyAnswers): boolea
 
 function buildRegistration(profile: ProfileFormValues, answers: SurveyAnswers): GraduateRegistration {
   const survey = Object.fromEntries(
-    SURVEY_QUESTIONS.map((question) => [question.id, (answers[question.id] ?? "").trim()]),
+    SURVEY_QUESTIONS.map((question) => {
+      const value = answers[question.id];
+      if (question.type === "multiple") return [question.id, Array.isArray(value) ? value : []];
+      return [question.id, typeof value === "string" ? value.trim() : ""];
+    }),
   ) as unknown as GraduateSurvey;
   return {
     profile: {
@@ -151,7 +155,11 @@ export default function App() {
   function goNext() {
     if (!currentAnswered) {
       setQuestionError(
-        question.type === "text" ? "Escribe tu respuesta para continuar." : "Elige una opción para continuar.",
+        question.type === "text"
+          ? "Escribe tu respuesta para continuar."
+          : question.type === "multiple"
+            ? "Elige al menos una opción para continuar."
+            : "Elige una opción para continuar.",
       );
       return;
     }
@@ -261,7 +269,7 @@ export default function App() {
                     key={question.id}
                     question={question}
                     number={currentQuestion + 1}
-                    value={answers[question.id] ?? ""}
+                    value={answers[question.id] ?? (question.type === "multiple" ? [] : "")}
                     headingRef={questionHeadingRef}
                     onSubmitText={goNext}
                     onChange={(value) => {

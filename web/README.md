@@ -3,6 +3,13 @@
 Aplicación React + TypeScript (Vite) para que el egresado actualice sus datos y
 responda 10 preguntas sobre su proyección profesional, una por pantalla.
 
+Las preguntas cerradas son de selección múltiple (casillas), salvo "años de
+experiencia", que es de una sola opción. Algunas tienen máximo de 3 opciones
+y otras tienen una opción excluyente ("Por ahora no deseo continuar", "No
+tengo barreras actualmente"). Todo se configura en `config/surveyQuestions.ts`
+(`maxSelections`, `exclusiveValues`) y el backend valida lo mismo en
+`app/registro.py`.
+
 Envía los registros al backend FastAPI de este mismo repo (ver "Conexión con
 la API"). Vive en `web/` y se publica en Vercel:
 https://registro-egresados-unir.vercel.app
@@ -36,7 +43,7 @@ src/
     GraduateRegistrationForm.tsx  "Actualiza tus datos" + validación
     SurveyProgress.tsx            "Pregunta X de 10" + barra
     SurveyQuestion.tsx            una pregunta (opciones o texto)
-    SelectableOption.tsx          tarjeta seleccionable (radio nativo)
+    SelectableOption.tsx          tarjeta seleccionable (radio o casilla nativos)
     CompletionSummary.tsx         pantalla final
     Toast.tsx                     aviso discreto (aria-live)
     FormError.tsx                 error bajo un campo

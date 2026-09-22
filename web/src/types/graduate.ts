@@ -15,17 +15,21 @@ export interface GraduateProfile {
   privacyConsent: boolean;
 }
 
+/**
+ * Respuestas del cuestionario. Las listas (string[]) son preguntas de
+ * selección múltiple; el cargo es texto y la experiencia, una sola opción.
+ */
 export interface GraduateSurvey {
-  employmentStatus: string;
+  employmentStatus: string[];
   targetRole: string;
-  preferredEducationType: string;
-  preferredPerformanceArea: string;
-  preferredEconomicSector: string;
+  preferredEducationType: string[];
+  preferredPerformanceArea: string[];
+  preferredEconomicSector: string[];
   yearsOfExperience: string;
-  prioritySkill: string;
-  preferredModality: string;
-  mainEducationBarrier: string;
-  preferredGraduateService: string;
+  prioritySkill: string[];
+  preferredModality: string[];
+  mainEducationBarrier: string[];
+  preferredGraduateService: string[];
 }
 
 export interface GraduateRegistration {
@@ -47,7 +51,8 @@ export type ProfileField = keyof ProfileFormValues;
 export type ProfileErrors = Partial<Record<ProfileField, string>>;
 
 export type SurveyField = keyof GraduateSurvey;
-export type SurveyAnswers = Partial<Record<SurveyField, string>>;
+export type SurveyAnswerValue = string | string[];
+export type SurveyAnswers = Partial<Record<SurveyField, SurveyAnswerValue>>;
 
 /** Etapas del proceso que muestra el panel lateral. */
 export type Stage = "profile" | "survey" | "done";
@@ -65,9 +70,20 @@ interface BaseQuestion {
   help: string;
 }
 
+/** Una sola opción (radio). */
 export interface ChoiceQuestion extends BaseQuestion {
   type: "choice";
   options: SelectOption[];
+}
+
+/** Varias opciones (casillas). */
+export interface MultipleChoiceQuestion extends BaseQuestion {
+  type: "multiple";
+  options: SelectOption[];
+  /** Máximo de opciones; sin valor = sin límite. */
+  maxSelections?: number;
+  /** Opciones que no se combinan con otras (p. ej. "No tengo barreras"). */
+  exclusiveValues?: string[];
 }
 
 export interface TextQuestion extends BaseQuestion {
@@ -76,11 +92,11 @@ export interface TextQuestion extends BaseQuestion {
   maxLength: number;
 }
 
-export type SurveyQuestionConfig = ChoiceQuestion | TextQuestion;
+export type SurveyQuestionConfig = ChoiceQuestion | MultipleChoiceQuestion | TextQuestion;
 
 /** Lo que se guarda en localStorage mientras el egresado no termina. */
 export interface GraduateDraft {
-  version: 1;
+  version: 2;
   stage: Exclude<Stage, "done">;
   profile: ProfileFormValues;
   answers: SurveyAnswers;

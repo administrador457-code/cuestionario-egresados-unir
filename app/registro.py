@@ -41,6 +41,14 @@ MODALIDADES = {"virtual", "virtual_en_vivo", "hibrida", "presencial", "indiferen
 BARRERAS = {"costo", "tiempo", "horarios", "programa_adecuado", "familiares", "ninguna"}
 SERVICIOS = {"bolsa_empleo", "orientacion", "networking", "descuentos", "mentorias", "eventos"}
 
+# Selección múltiple: máximos y opciones que no se combinan con otras.
+MAX_AREAS = 3
+MAX_SECTORES = 3
+MAX_COMPETENCIAS = 3
+MAX_SERVICIOS = 3
+EXCLUSIVA_FORMACION = frozenset({"ninguna"})
+EXCLUSIVA_BARRERA = frozenset({"ninguna"})
+
 PROGRAMA_OTRO = "otro"
 PRIMER_ANIO_GRADUACION = 2010
 
@@ -58,6 +66,24 @@ def _opcion(valor: str, permitidos: set[str], campo: str) -> str:
     if valor not in permitidos:
         raise ValueError(f"Opción no válida en '{campo}'.")
     return valor
+
+
+def _opciones(
+    valores: list[str], permitidos: set[str], campo: str,
+    maximo: int | None = None, exclusivas: frozenset[str] = frozenset(),
+) -> list[str]:
+    """Valida una pregunta de selección múltiple (mismas reglas que el frontend)."""
+    if not valores:
+        raise ValueError(f"Elige al menos una opción en '{campo}'.")
+    if len(set(valores)) != len(valores):
+        raise ValueError(f"Opciones repetidas en '{campo}'.")
+    for valor in valores:
+        _opcion(valor, permitidos, campo)
+    if maximo is not None and len(valores) > maximo:
+        raise ValueError(f"Máximo {maximo} opciones en '{campo}'.")
+    if len(valores) > 1 and exclusivas & set(valores):
+        raise ValueError(f"'{', '.join(sorted(exclusivas))}' no se combina con otras opciones en '{campo}'.")
+    return valores
 
 
 class PerfilEgresado(_Camel):
@@ -123,16 +149,19 @@ class PerfilEgresado(_Camel):
 
 
 class EncuestaEgresado(_Camel):
-    employment_status: str
+    """Las 10 respuestas. Todas son de selección múltiple salvo el cargo
+    (texto) y los años de experiencia (una sola opción)."""
+
+    employment_status: list[str]
     target_role: str = Field(min_length=2, max_length=150)
-    preferred_education_type: str
-    preferred_performance_area: str
-    preferred_economic_sector: str
+    preferred_education_type: list[str]
+    preferred_performance_area: list[str]
+    preferred_economic_sector: list[str]
     years_of_experience: str
-    priority_skill: str
-    preferred_modality: str
-    main_education_barrier: str
-    preferred_graduate_service: str
+    priority_skill: list[str]
+    preferred_modality: list[str]
+    main_education_barrier: list[str]
+    preferred_graduate_service: list[str]
 
     @field_validator("target_role", mode="before")
     @classmethod
@@ -141,23 +170,23 @@ class EncuestaEgresado(_Camel):
 
     @field_validator("employment_status")
     @classmethod
-    def _v1(cls, v: str) -> str:
-        return _opcion(v, SITUACION_LABORAL, "employmentStatus")
+    def _v1(cls, v: list[str]) -> list[str]:
+        return _opciones(v, SITUACION_LABORAL, "employmentStatus")
 
     @field_validator("preferred_education_type")
     @classmethod
-    def _v3(cls, v: str) -> str:
-        return _opcion(v, TIPO_FORMACION, "preferredEducationType")
+    def _v3(cls, v: list[str]) -> list[str]:
+        return _opciones(v, TIPO_FORMACION, "preferredEducationType", exclusivas=EXCLUSIVA_FORMACION)
 
     @field_validator("preferred_performance_area")
     @classmethod
-    def _v4(cls, v: str) -> str:
-        return _opcion(v, AREAS, "preferredPerformanceArea")
+    def _v4(cls, v: list[str]) -> list[str]:
+        return _opciones(v, AREAS, "preferredPerformanceArea", maximo=MAX_AREAS)
 
     @field_validator("preferred_economic_sector")
     @classmethod
-    def _v5(cls, v: str) -> str:
-        return _opcion(v, SECTORES, "preferredEconomicSector")
+    def _v5(cls, v: list[str]) -> list[str]:
+        return _opciones(v, SECTORES, "preferredEconomicSector", maximo=MAX_SECTORES)
 
     @field_validator("years_of_experience")
     @classmethod
@@ -166,23 +195,23 @@ class EncuestaEgresado(_Camel):
 
     @field_validator("priority_skill")
     @classmethod
-    def _v7(cls, v: str) -> str:
-        return _opcion(v, COMPETENCIAS, "prioritySkill")
+    def _v7(cls, v: list[str]) -> list[str]:
+        return _opciones(v, COMPETENCIAS, "prioritySkill", maximo=MAX_COMPETENCIAS)
 
     @field_validator("preferred_modality")
     @classmethod
-    def _v8(cls, v: str) -> str:
-        return _opcion(v, MODALIDADES, "preferredModality")
+    def _v8(cls, v: list[str]) -> list[str]:
+        return _opciones(v, MODALIDADES, "preferredModality")
 
     @field_validator("main_education_barrier")
     @classmethod
-    def _v9(cls, v: str) -> str:
-        return _opcion(v, BARRERAS, "mainEducationBarrier")
+    def _v9(cls, v: list[str]) -> list[str]:
+        return _opciones(v, BARRERAS, "mainEducationBarrier", exclusivas=EXCLUSIVA_BARRERA)
 
     @field_validator("preferred_graduate_service")
     @classmethod
-    def _v10(cls, v: str) -> str:
-        return _opcion(v, SERVICIOS, "preferredGraduateService")
+    def _v10(cls, v: list[str]) -> list[str]:
+        return _opciones(v, SERVICIOS, "preferredGraduateService", maximo=MAX_SERVICIOS)
 
 
 class RegistroEgresado(_Camel):
@@ -200,7 +229,7 @@ _TIPO_A_RECOMENDADOR = {
     "maestria": "maestria",
     "curso_corto": "curso_corto",
     "diplomado": "curso_corto",
-    "doctorado": "sin_definir",   # no hay doctorados en el catalogo: no se filtra por tipo
+    "doctorado": "doctorado",   # hoy no hay doctorados en el catálogo: no filtra nada
     "ninguna": "ninguna",
 }
 
@@ -219,17 +248,19 @@ def perfil_para_recomendador(registro: RegistroEgresado, programas: list[dict[st
         if cursado and tipo_programa(cursado) in ("especializacion", "maestria", "doctorado"):
             nivel = tipo_programa(cursado)
 
-    def lista(valor: str, excluido: str) -> list[str]:
-        return [] if valor == excluido else [valor]
+    def sin(valores: list[str], excluido: str) -> list[str]:
+        return [v for v in valores if v != excluido]
+
+    tipos = list(dict.fromkeys(_TIPO_A_RECOMENDADOR[t] for t in encuesta.preferred_education_type))
 
     return {
         "programa_egreso": programa,
         "nivel_formacion": nivel,
         "cargo_aspirado": encuesta.target_role,
-        "areas_interes": lista(encuesta.preferred_performance_area, "otra"),
-        "sectores_interes": lista(encuesta.preferred_economic_sector, "otro"),
-        "habilidades_fortalecer": lista(encuesta.priority_skill, "otra"),
-        "tipo_formacion": _TIPO_A_RECOMENDADOR[encuesta.preferred_education_type],
+        "areas_interes": sin(encuesta.preferred_performance_area, "otra"),
+        "sectores_interes": sin(encuesta.preferred_economic_sector, "otro"),
+        "habilidades_fortalecer": sin(encuesta.priority_skill, "otra"),
+        "tipo_formacion": tipos,
         # El registro nuevo no pregunta plazo ni horas: se usan valores neutros.
         "horizonte_meta": "2_anios",
         "horas_semanales": "5_10",

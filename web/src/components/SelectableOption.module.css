@@ -2,8 +2,8 @@
   position: relative;
 }
 
-/* El radio nativo queda oculto a la vista pero accesible. */
-.radio {
+/* El radio o la casilla nativos quedan ocultos a la vista pero accesibles. */
+.control {
   position: absolute;
   opacity: 0;
   width: 1px;
@@ -43,17 +43,32 @@
   color: var(--blanco);
 }
 
-.radio:checked + .tarjeta {
+.control:checked + .tarjeta {
   border-color: var(--rojo);
   background: var(--rojo-suave);
   font-weight: 600;
 }
 
-.radio:checked + .tarjeta .indicador {
+.control:checked + .tarjeta .indicador {
   border-color: var(--rojo);
   background: var(--rojo);
 }
 
-.radio:focus-visible + .tarjeta {
+.control:focus-visible + .tarjeta {
   box-shadow: var(--foco);
+}
+
+/* Selección múltiple: indicador cuadrado, para distinguirla de una sola opción. */
+.multiple .indicador {
+  border-radius: 5px;
+}
+
+.control:disabled + .tarjeta {
+  cursor: not-allowed;
+  color: var(--texto-secundario);
+  background: var(--fondo);
+}
+
+.control:disabled + .tarjeta:hover {
+  border-color: var(--borde);
 }

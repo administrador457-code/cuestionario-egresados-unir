@@ -147,9 +147,9 @@ def guardar_registro(registro, version: int) -> dict[str, Any]:
             INSERT INTO registros_egresados (
                 version_registro, nombres, apellidos, tipo_documento, numero_documento, email, telefono,
                 pais, ciudad, programa_cursado_id, anio_graduacion, acepta_tratamiento_datos,
-                situacion_laboral, cargo_aspirado, tipo_formacion, area_desempeno, sector_economico,
-                anios_experiencia, competencia_prioritaria, modalidad_preferida, barrera_principal,
-                servicio_preferido)
+                situacion_laboral, cargo_aspirado, tipos_formacion, areas_desempeno, sectores_economicos,
+                anios_experiencia, competencias_prioritarias, modalidades_preferidas, barreras,
+                servicios_preferidos)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (tipo_documento, numero_documento) DO UPDATE SET
                 version_registro = EXCLUDED.version_registro,
@@ -158,11 +158,11 @@ def guardar_registro(registro, version: int) -> dict[str, Any]:
                 programa_cursado_id = EXCLUDED.programa_cursado_id, anio_graduacion = EXCLUDED.anio_graduacion,
                 acepta_tratamiento_datos = EXCLUDED.acepta_tratamiento_datos, aceptado_en = now(),
                 situacion_laboral = EXCLUDED.situacion_laboral, cargo_aspirado = EXCLUDED.cargo_aspirado,
-                tipo_formacion = EXCLUDED.tipo_formacion, area_desempeno = EXCLUDED.area_desempeno,
-                sector_economico = EXCLUDED.sector_economico, anios_experiencia = EXCLUDED.anios_experiencia,
-                competencia_prioritaria = EXCLUDED.competencia_prioritaria,
-                modalidad_preferida = EXCLUDED.modalidad_preferida, barrera_principal = EXCLUDED.barrera_principal,
-                servicio_preferido = EXCLUDED.servicio_preferido, actualizado_en = now()
+                tipos_formacion = EXCLUDED.tipos_formacion, areas_desempeno = EXCLUDED.areas_desempeno,
+                sectores_economicos = EXCLUDED.sectores_economicos, anios_experiencia = EXCLUDED.anios_experiencia,
+                competencias_prioritarias = EXCLUDED.competencias_prioritarias,
+                modalidades_preferidas = EXCLUDED.modalidades_preferidas, barreras = EXCLUDED.barreras,
+                servicios_preferidos = EXCLUDED.servicios_preferidos, actualizado_en = now()
             RETURNING id, token
             """,
             (

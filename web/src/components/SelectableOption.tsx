@@ -1,32 +1,36 @@
 import styles from "./SelectableOption.module.css";
 
 interface SelectableOptionProps {
+  /** "radio": una sola opción. "checkbox": selección múltiple. */
+  kind: "radio" | "checkbox";
   name: string;
   value: string;
   label: string;
   checked: boolean;
+  disabled?: boolean;
   onSelect: (value: string) => void;
 }
 
 /**
- * Tarjeta seleccionable. Por dentro es un radio button nativo, así que
- * funciona con teclado (Tab para entrar al grupo, flechas para moverse,
- * espacio para marcar) y con lectores de pantalla sin código adicional.
+ * Tarjeta seleccionable. Por dentro es un radio o una casilla nativos, así
+ * que funciona con teclado (Tab y espacio; flechas en los radios) y con
+ * lectores de pantalla sin código adicional.
  */
-export function SelectableOption({ name, value, label, checked, onSelect }: SelectableOptionProps) {
+export function SelectableOption({ kind, name, value, label, checked, disabled, onSelect }: SelectableOptionProps) {
   const id = `${name}-${value}`;
   return (
     <div className={styles.opcion}>
       <input
-        className={styles.radio}
-        type="radio"
+        className={styles.control}
+        type={kind}
         id={id}
         name={name}
         value={value}
         checked={checked}
+        disabled={disabled}
         onChange={() => onSelect(value)}
       />
-      <label className={styles.tarjeta} htmlFor={id}>
+      <label className={`${styles.tarjeta} ${kind === "checkbox" ? styles.multiple : ""}`} htmlFor={id}>
         <span className={styles.indicador} aria-hidden="true">
           {checked ? (
             <svg viewBox="0 0 16 16" width="12" height="12" focusable="false">

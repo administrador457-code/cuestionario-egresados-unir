@@ -86,17 +86,17 @@ CREATE TABLE IF NOT EXISTS registros_egresados (
     anio_graduacion             INTEGER NOT NULL,
     acepta_tratamiento_datos    BOOLEAN NOT NULL,
     aceptado_en                 TIMESTAMPTZ NOT NULL DEFAULT now(),
-    -- las 10 respuestas
-    situacion_laboral           TEXT NOT NULL,
+    -- las 10 respuestas (TEXT[] = selección múltiple)
+    situacion_laboral           TEXT[] NOT NULL,
     cargo_aspirado              TEXT NOT NULL,
-    tipo_formacion              TEXT NOT NULL,
-    area_desempeno              TEXT NOT NULL,
-    sector_economico            TEXT NOT NULL,
+    tipos_formacion             TEXT[] NOT NULL,
+    areas_desempeno             TEXT[] NOT NULL,
+    sectores_economicos         TEXT[] NOT NULL,
     anios_experiencia           TEXT NOT NULL,
-    competencia_prioritaria     TEXT NOT NULL,
-    modalidad_preferida         TEXT NOT NULL,
-    barrera_principal           TEXT NOT NULL,
-    servicio_preferido          TEXT NOT NULL,
+    competencias_prioritarias   TEXT[] NOT NULL,
+    modalidades_preferidas      TEXT[] NOT NULL,
+    barreras                    TEXT[] NOT NULL,
+    servicios_preferidos        TEXT[] NOT NULL,
     creado_en                   TIMESTAMPTZ NOT NULL DEFAULT now(),
     actualizado_en              TIMESTAMPTZ NOT NULL DEFAULT now(),
     -- una persona = un documento; si vuelve a registrarse, se actualiza
@@ -116,5 +116,5 @@ CREATE TABLE IF NOT EXISTS recomendaciones_registro (
 );
 
 CREATE INDEX IF NOT EXISTS idx_recomendaciones_registro ON recomendaciones_registro (registro_id, posicion);
-CREATE INDEX IF NOT EXISTS idx_registros_area ON registros_egresados (area_desempeno);
+CREATE INDEX IF NOT EXISTS idx_registros_areas ON registros_egresados USING GIN (areas_desempeno);
 CREATE INDEX IF NOT EXISTS idx_registros_email ON registros_egresados (email);
