@@ -228,3 +228,114 @@ def buscar_m0(tipo_documento: str, numero_documento: str) -> dict[str, Any] | No
             "SELECT * FROM m0_egresados WHERE tipo_documento = %s AND upper(numero_documento) = upper(%s)",
             (tipo_documento, numero_documento),
         ).fetchone()
+
+
+# ------------------------------------------------------------------ catálogo de mercado
+def buscar_habilidades(texto: str, limite: int = 10) -> list[dict[str, Any]]:
+    """Habilidades del catálogo que empiezan por (primero) o contienen el texto.
+    Sin texto: las más pedidas por las vacantes vigentes."""
+    with conexion() as conn:
+        if not texto:
+            return conn.execute(
+                "SELECT clave, nombre, categoria, vacantes FROM habilidades WHERE vacantes > 0 "
+                "ORDER BY vacantes DESC, clave LIMIT %s",
+                (limite,),
+            ).fetchall()
+        return conn.execute(
+            """
+            SELECT clave, nombre, categoria, vacantes FROM habilidades
+             WHERE clave LIKE %(contiene)s OR lower(nombre) LIKE %(contiene)s
+             ORDER BY (clave LIKE %(inicio)s) DESC, vacantes DESC, length(clave), clave
+             LIMIT %(limite)s
+            """,
+            {"contiene": f"%{texto}%", "inicio": f"{texto}%", "limite": limite},
+        ).fetchall()
+
+
+def habilidades_existentes(claves: list[str]) -> set[str]:
+    with conexion() as conn:
+        filas = conn.execute("SELECT clave FROM habilidades WHERE clave = ANY(%s)", (claves,)).fetchall()
+    return {f["clave"] for f in filas}
+
+
+def buscar_cargos(texto: str, limite: int = 8) -> list[dict[str, Any]]:
+    with conexion() as conn:
+        return conn.execute(
+            """
+            SELECT nombre, vacantes FROM cargos_mercado
+             WHERE clave LIKE %(contiene)s
+             ORDER BY (clave LIKE %(inicio)s) DESC, vacantes DESC, length(clave)
+             LIMIT %(limite)s
+            """,
+            {"contiene": f"%{texto}%", "inicio": f"{texto}%", "limite": limite},
+        ).fetchall()
+
+
+# ------------------------------------------------------------------ onboarding
+def guardar_onboarding(o, version: int) -> dict[str, Any]:
+    p, r = o.profile, o.answers
+    programa_id = int(p.program) if p.program.isdigit() else None
+    with conexion() as conn:
+        fila = conn.execute(
+            """
+            INSERT INTO perfiles_onboarding (
+                version, tipo_documento, numero_documento, nombres, apellidos, email, programa_cursado_id,
+                anio_graduacion, acepta_tratamiento_datos, precargado_de_m0, cargo_objetivo,
+                objetivo_profesional, areas, sectores, habilidades_actuales, tipos_formacion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (tipo_documento, numero_documento) DO UPDATE SET
+                version = EXCLUDED.version, nombres = EXCLUDED.nombres, apellidos = EXCLUDED.apellidos,
+                email = EXCLUDED.email, programa_cursado_id = EXCLUDED.programa_cursado_id,
+                anio_graduacion = EXCLUDED.anio_graduacion,
+                acepta_tratamiento_datos = EXCLUDED.acepta_tratamiento_datos, aceptado_en = now(),
+                precargado_de_m0 = EXCLUDED.precargado_de_m0, cargo_objetivo = EXCLUDED.cargo_objetivo,
+                objetivo_profesional = EXCLUDED.objetivo_profesional, areas = EXCLUDED.areas,
+                sectores = EXCLUDED.sectores, habilidades_actuales = EXCLUDED.habilidades_actuales,
+                tipos_formacion = EXCLUDED.tipos_formacion, actualizado_en = now()
+            RETURNING id, token
+            """,
+            (
+                version, p.document_type, p.document_number, p.first_name, p.last_name, str(p.email).lower(),
+                programa_id, p.graduation_year, p.privacy_consent, o.prefilled_from_m0, r.target_role,
+                r.career_goal, r.performance_areas, r.economic_sectors, r.current_skills, r.education_types,
+            ),
+        ).fetchone()
+    return {"id": fila["id"], "token": str(fila["token"])}
+
+
+def guardar_recomendaciones_onboarding(perfil_id: int, recomendaciones: list[dict[str, Any]]) -> None:
+    with conexion() as conn, conn.transaction():
+        conn.execute("DELETE FROM recomendaciones_onboarding WHERE perfil_id = %s", (perfil_id,))
+        for r in recomendaciones:
+            conn.execute(
+                """
+                INSERT INTO recomendaciones_onboarding
+                    (perfil_id, posicion, programa_id, programa_nombre, puntaje, desglose, razones)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    perfil_id, r["posicion"], r["programa_id"], r["programa_nombre"], r["puntaje"],
+                    json.dumps(r["desglose"], ensure_ascii=False), json.dumps(r["razones"], ensure_ascii=False),
+                ),
+            )
+
+
+def obtener_onboarding(token: str) -> dict[str, Any] | None:
+    with conexion() as conn:
+        perfil = conn.execute(
+            "SELECT id, nombres, cargo_objetivo FROM perfiles_onboarding WHERE token = %s", (token,)
+        ).fetchone()
+        if not perfil:
+            return None
+        recomendaciones = conn.execute(
+            """
+            SELECT r.posicion, r.programa_id, r.programa_nombre, r.puntaje, r.razones,
+                   p.facultad, p.source_url AS url
+              FROM recomendaciones_onboarding r
+              LEFT JOIN programas_unir p ON p.id = r.programa_id
+             WHERE r.perfil_id = %s
+             ORDER BY r.posicion
+            """,
+            (perfil["id"],),
+        ).fetchall()
+    return {"nombre": perfil["nombres"], "cargo": perfil["cargo_objetivo"], "recomendaciones": recomendaciones}

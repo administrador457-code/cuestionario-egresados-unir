@@ -7,8 +7,7 @@ export interface CompletionData {
   fullName: string;
   programLabel: string;
   graduationYear: number;
-  answered: number;
-  total: number;
+  targetRole: string;
   recommendations: ProgramRecommendation[];
 }
 
@@ -56,10 +55,8 @@ export function CompletionSummary({ data, onRestart, headingRef }: CompletionSum
           <dd>{data.graduationYear}</dd>
         </div>
         <div>
-          <dt>Respuestas completadas</dt>
-          <dd>
-            {data.answered} de {data.total}
-          </dd>
+          <dt>Cargo al que aspiras</dt>
+          <dd>{data.targetRole}</dd>
         </div>
       </dl>
 

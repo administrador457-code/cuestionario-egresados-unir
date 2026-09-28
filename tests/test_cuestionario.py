@@ -295,3 +295,102 @@ def test_m0_precarga_es_registrable(cliente):
     registro["profile"].update({"documentType": "CC", "documentNumber": "9990000001"})
     registro["survey"]["employmentStatus"] = datos["survey"]["employmentStatus"]
     assert cliente.post("/api/registros", json=registro).status_code == 200
+
+
+# ------------------------------------------------ normalización y onboarding
+MERCADO = json.loads((Path(__file__).parent / "mercado_muestra.json").read_text(encoding="utf-8"))
+
+
+def test_normalizacion_une_variantes():
+    from app.habilidades import clave_habilidad, consolidar_habilidades
+
+    assert clave_habilidad("Python") == clave_habilidad("python") == "python"
+    assert clave_habilidad("APIs") == clave_habilidad("api") == "api"
+    assert clave_habilidad("BI") == clave_habilidad("business intelligence")
+    assert clave_habilidad("Excel avanzado") == "excel"
+    assert clave_habilidad("C++") == "c++"
+
+    catalogo = {h["clave"]: h for h in consolidar_habilidades(MERCADO["habilidades"], ["Python", "Pedagogía"])}
+    assert catalogo["python"]["vacantes"] == 306 and catalogo["python"]["nombre"] == "Python"
+    assert catalogo["python"]["categoria"] == "Programming / Analytics"  # ignora "Unknown"
+    assert catalogo["business intelligence"]["vacantes"] == 373
+    assert catalogo["liderazgo"]["vacantes"] == 234
+    assert catalogo["python"]["en_programas"] and catalogo["pedagogia"]["en_programas"]
+
+
+def test_cargos_se_limpian_y_agrupan():
+    from app.habilidades import consolidar_cargos, limpiar_cargo
+
+    assert limpiar_cargo("Analista de Datos - Bogotá") == "Analista de Datos"
+    assert limpiar_cargo("ANALISTA DE DATOS (A)") == "ANALISTA DE DATOS"
+    assert limpiar_cargo("Ejecutivo comercial urgente") == "Ejecutivo comercial"
+    cargos = {c["clave"]: c for c in consolidar_cargos(MERCADO["cargos"])}
+    assert cargos["analista de datos"]["vacantes"] == 57
+    assert cargos["analista de datos"]["nombre"] == "Analista de datos"
+
+
+def test_areas_sugeridas_por_cargo():
+    from app.onboarding import areas_para_cargo
+
+    assert "datos_ia" in areas_para_cargo("Analista de datos")
+    assert "comercial_marketing" in areas_para_cargo("Gerente comercial")
+    assert areas_para_cargo("") == []
+
+
+ONBOARDING = {
+    "profile": {
+        "firstName": "Laura Camila", "lastName": "Méndez Ortiz", "documentType": "CC",
+        "documentNumber": "9990000001", "email": "laura.mendez.demo@ejemplo.co", "program": "4",
+        "graduationYear": 2024, "privacyConsent": True,
+    },
+    "answers": {
+        "targetRole": "Analista de datos", "careerGoal": "ascender",
+        "performanceAreas": ["datos_ia"], "economicSectors": ["financiero"],
+        "currentSkills": ["sql", "excel", "power bi"], "educationTypes": ["no_seguro"],
+    },
+    "prefilledFromM0": True,
+    "status": "completed",
+}
+
+
+@pytest.fixture(scope="module")
+def cliente_mercado(cliente):
+    from scripts.sincronizar_programas import escribir_mercado
+
+    escribir_mercado(MERCADO, [s for p in PROGRAMAS for s in p.get("skills", [])])
+    return cliente
+
+
+def test_api_habilidades_y_cargos(cliente_mercado):
+    top = cliente_mercado.get("/api/habilidades").json()
+    assert top[0]["name"] == "Business Intelligence" and top[0]["demand"] == 373
+    pyt = cliente_mercado.get("/api/habilidades", params={"q": "pyth"}).json()
+    assert [h["key"] for h in pyt] == ["python"]
+    assert cliente_mercado.get("/api/habilidades", params={"q": "Pedagogía"}).json()[0]["key"] == "pedagogia"
+    cargos = cliente_mercado.get("/api/cargos", params={"q": "analista"}).json()
+    assert cargos[0] == {"name": "Analista de datos", "demand": 57}
+    assert cliente_mercado.get("/api/cargos", params={"q": "a"}).json() == []
+    assert "datos_ia" in cliente_mercado.get("/api/areas-sugeridas", params={"cargo": "Científico de datos"}).json()
+
+
+def test_api_onboarding(cliente_mercado):
+    r = cliente_mercado.post("/api/onboarding", json=ONBOARDING)
+    assert r.status_code == 200, r.text
+    cuerpo = r.json()
+    assert cuerpo["recommendations"] and cuerpo["recommendations"][0]["programId"] != 4  # excluye su programa
+    guardado = cliente_mercado.get(f"/api/onboarding/{cuerpo['registrationId']}/recomendaciones").json()
+    assert guardado["targetRole"] == "Analista de datos"
+
+
+@pytest.mark.parametrize("seccion,campo,valor", [
+    ("answers", "currentSkills", []),
+    ("answers", "currentSkills", ["habilidad-inventada"]),
+    ("answers", "careerGoal", "ser-famoso"),
+    ("answers", "educationTypes", ["no_seguro", "maestria"]),
+    ("answers", "performanceAreas", ["datos_ia", "finanzas", "educacion", "salud_sst"]),
+    ("profile", "privacyConsent", False),
+])
+def test_api_onboarding_rechaza(cliente_mercado, seccion, campo, valor):
+    datos = json.loads(json.dumps(ONBOARDING))
+    datos[seccion][campo] = valor
+    assert cliente_mercado.post("/api/onboarding", json=datos).status_code == 422

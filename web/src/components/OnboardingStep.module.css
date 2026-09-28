@@ -1,0 +1,41 @@
+.pantalla {
+  display: grid;
+  gap: 2rem;
+}
+
+.titulo {
+  font-size: clamp(1.625rem, 3.4vw, 2.125rem);
+  line-height: 1.2;
+}
+
+.numero {
+  color: var(--rojo);
+}
+
+.pregunta {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.enunciado {
+  font-family: var(--fuente-titulo);
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.ayuda {
+  color: var(--texto-secundario);
+  max-width: 60ch;
+}
+
+.sugerencia {
+  margin-top: -1.25rem;
+  padding: 0.625rem 0.875rem;
+  border-left: 4px solid var(--verde);
+  border-radius: 6px;
+  background: var(--verde-suave);
+  color: var(--verde);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}

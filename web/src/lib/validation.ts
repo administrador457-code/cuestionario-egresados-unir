@@ -1,22 +1,14 @@
 import { FIRST_GRADUATION_YEAR } from "../config/formOptions";
-import type {
-  ProfileErrors,
-  ProfileField,
-  ProfileFormValues,
-  SurveyAnswers,
-  SurveyQuestionConfig,
-} from "../types/graduate";
+import { MAX_AREAS, MAX_SECTORS, MAX_SKILLS } from "../config/onboardingOptions";
+import type { OnboardingAnswers, ProfileErrors, ProfileField, ProfileFormValues } from "../types/graduate";
 
 /** Orden visual de los campos: define a cuál se lleva el foco primero. */
 export const PROFILE_FIELD_ORDER: ProfileField[] = [
-  "firstName",
-  "lastName",
   "documentType",
   "documentNumber",
+  "firstName",
+  "lastName",
   "email",
-  "phone",
-  "country",
-  "city",
   "program",
   "graduationYear",
   "privacyConsent",
@@ -24,17 +16,12 @@ export const PROFILE_FIELD_ORDER: ProfileField[] = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DOCUMENT_PATTERN = /^[A-Za-z0-9-]{4,20}$/;
-const PHONE_ALLOWED = /^\+?[\d\s()-]+$/;
 
 export function validateProfileField(field: ProfileField, values: ProfileFormValues): string | undefined {
   const value = values[field];
   const text = typeof value === "string" ? value.trim() : "";
 
   switch (field) {
-    case "firstName":
-      return text.length < 2 ? "Escribe tus nombres." : undefined;
-    case "lastName":
-      return text.length < 2 ? "Escribe tus apellidos." : undefined;
     case "documentType":
       return text ? undefined : "Elige el tipo de documento.";
     case "documentNumber":
@@ -42,21 +29,13 @@ export function validateProfileField(field: ProfileField, values: ProfileFormVal
       return DOCUMENT_PATTERN.test(text)
         ? undefined
         : "Usa solo números y letras, sin puntos ni espacios (entre 4 y 20 caracteres).";
+    case "firstName":
+      return text.length < 2 ? "Escribe tus nombres." : undefined;
+    case "lastName":
+      return text.length < 2 ? "Escribe tus apellidos." : undefined;
     case "email":
       if (!text) return "Escribe tu correo electrónico.";
       return EMAIL_PATTERN.test(text) ? undefined : "Revisa el correo: debe tener la forma nombre@dominio.com.";
-    case "phone": {
-      if (!text) return "Escribe tu teléfono móvil.";
-      const digits = text.replace(/\D/g, "");
-      if (!PHONE_ALLOWED.test(text) || digits.length < 7 || digits.length > 15) {
-        return "Escribe un teléfono válido: entre 7 y 15 dígitos, con indicativo si estás fuera de Colombia.";
-      }
-      return undefined;
-    }
-    case "country":
-      return text ? undefined : "Elige tu país de residencia.";
-    case "city":
-      return text.length < 2 ? "Escribe tu ciudad de residencia." : undefined;
     case "program":
       return text ? undefined : "Elige el programa que cursaste en UNIR.";
     case "graduationYear": {
@@ -85,32 +64,42 @@ export function firstInvalidField(errors: ProfileErrors): ProfileField | undefin
   return PROFILE_FIELD_ORDER.find((field) => errors[field]);
 }
 
-export function isQuestionAnswered(question: SurveyQuestionConfig, answers: SurveyAnswers): boolean {
-  const value = answers[question.id];
-  if (question.type === "text") return typeof value === "string" && value.trim().length > 0;
-  if (question.type === "multiple") {
-    if (!Array.isArray(value) || value.length === 0) return false;
-    const valid = value.every((item) => question.options.some((option) => option.value === item));
-    const withinMax = question.maxSelections === undefined || value.length <= question.maxSelections;
-    return valid && withinMax;
+/**
+ * Errores de una pantalla del onboarding (0 a 3), en el orden en que aparecen.
+ * Lista vacía = se puede avanzar.
+ */
+export function validateStep(step: number, answers: OnboardingAnswers): string[] {
+  const errors: string[] = [];
+  if (step === 0) {
+    if (answers.targetRole.trim().length < 2) errors.push("Escribe el cargo o rol al que aspiras.");
+    if (!answers.careerGoal) errors.push("Elige tu principal objetivo profesional.");
+  } else if (step === 1) {
+    if (answers.performanceAreas.length === 0) errors.push("Elige al menos un área de desempeño.");
+    if (answers.performanceAreas.length > MAX_AREAS) errors.push(`Elige como máximo ${MAX_AREAS} áreas.`);
+    if (answers.economicSectors.length === 0) errors.push("Elige al menos un sector económico.");
+    if (answers.economicSectors.length > MAX_SECTORS) errors.push(`Elige como máximo ${MAX_SECTORS} sectores.`);
+  } else if (step === 2) {
+    if (answers.currentSkills.length === 0) errors.push("Agrega al menos una habilidad o herramienta que domines.");
+    if (answers.currentSkills.length > MAX_SKILLS) errors.push(`Agrega como máximo ${MAX_SKILLS} habilidades.`);
+  } else if (step === 3) {
+    if (answers.educationTypes.length === 0) errors.push("Elige al menos una opción de formación.");
   }
-  return typeof value === "string" && question.options.some((option) => option.value === value);
+  return errors;
 }
 
 /**
- * Marca o desmarca una opción de una pregunta múltiple respetando las
- * opciones excluyentes (p. ej. "No tengo barreras" borra las demás y al
- * revés) y el máximo permitido.
+ * Marca o desmarca una opción de selección múltiple respetando las opciones
+ * excluyentes (p. ej. "No estoy seguro" borra las demás y al revés) y el máximo.
  */
 export function toggleMultipleValue(
-  question: { maxSelections?: number; exclusiveValues?: string[] },
+  rules: { maxSelections?: number; exclusiveValues?: string[] },
   current: string[],
   value: string,
 ): string[] {
   if (current.includes(value)) return current.filter((item) => item !== value);
-  const exclusive = question.exclusiveValues ?? [];
+  const exclusive = rules.exclusiveValues ?? [];
   if (exclusive.includes(value)) return [value];
   const next = [...current.filter((item) => !exclusive.includes(item)), value];
-  if (question.maxSelections !== undefined && next.length > question.maxSelections) return current;
+  if (rules.maxSelections !== undefined && next.length > rules.maxSelections) return current;
   return next;
 }

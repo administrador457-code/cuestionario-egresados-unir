@@ -2,24 +2,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CompletionSummary, type CompletionData } from "./components/CompletionSummary";
 import { GraduateRegistrationForm } from "./components/GraduateRegistrationForm";
 import { Header } from "./components/Header";
+import { OnboardingStep } from "./components/OnboardingStep";
 import { ProcessSteps } from "./components/ProcessSteps";
 import { SurveyProgress } from "./components/SurveyProgress";
-import { SurveyQuestion } from "./components/SurveyQuestion";
 import { Toast } from "./components/Toast";
 import { PROGRAMS, labelFor } from "./config/formOptions";
-import { SURVEY_QUESTIONS, TOTAL_QUESTIONS } from "./config/surveyQuestions";
-import { clearDraft, loadDraft, saveDraft } from "./lib/draftStorage";
-import { isQuestionAnswered } from "./lib/validation";
+import { ONBOARDING_STEPS, TOTAL_STEPS } from "./config/onboardingOptions";
+import { EMPTY_ANSWERS, clearDraft, loadDraft, saveDraft } from "./lib/draftStorage";
+import { validateStep } from "./lib/validation";
 import { submitGraduateRegistration } from "./services/registrationService";
 import buttons from "./styles/buttons.module.css";
 import type {
   GraduateRegistration,
   M0Prefill,
-  GraduateSurvey,
+  OnboardingAnswers,
   ProfileField,
   ProfileFormValues,
   Stage,
-  SurveyAnswers,
 } from "./types/graduate";
 import styles from "./App.module.css";
 
@@ -29,9 +28,6 @@ const EMPTY_PROFILE: ProfileFormValues = {
   documentType: "",
   documentNumber: "",
   email: "",
-  phone: "",
-  country: "Colombia",
-  city: "",
   program: "",
   graduationYear: "",
   privacyConsent: false,
@@ -42,21 +38,16 @@ const SUBMIT_ERROR = "No fue posible registrar la información. Revisa tu conexi
 
 type SubmitStatus = "idle" | "submitting" | "error";
 
-function hasProgress(profile: ProfileFormValues, answers: SurveyAnswers): boolean {
-  const typed = (Object.keys(EMPTY_PROFILE) as ProfileField[]).some(
-    (field) => profile[field] !== EMPTY_PROFILE[field],
-  );
-  return typed || Object.keys(answers).length > 0;
+function hasProgress(profile: ProfileFormValues, answers: OnboardingAnswers): boolean {
+  const typed = (Object.keys(EMPTY_PROFILE) as ProfileField[]).some((field) => profile[field] !== EMPTY_PROFILE[field]);
+  return typed || JSON.stringify(answers) !== JSON.stringify(EMPTY_ANSWERS);
 }
 
-function buildRegistration(profile: ProfileFormValues, answers: SurveyAnswers): GraduateRegistration {
-  const survey = Object.fromEntries(
-    SURVEY_QUESTIONS.map((question) => {
-      const value = answers[question.id];
-      if (question.type === "multiple") return [question.id, Array.isArray(value) ? value : []];
-      return [question.id, typeof value === "string" ? value.trim() : ""];
-    }),
-  ) as unknown as GraduateSurvey;
+function buildRegistration(
+  profile: ProfileFormValues,
+  answers: OnboardingAnswers,
+  prefilledFromM0: boolean,
+): GraduateRegistration {
   return {
     profile: {
       ...profile,
@@ -64,11 +55,14 @@ function buildRegistration(profile: ProfileFormValues, answers: SurveyAnswers): 
       lastName: profile.lastName.trim(),
       documentNumber: profile.documentNumber.trim(),
       email: profile.email.trim().toLowerCase(),
-      phone: profile.phone.trim(),
-      city: profile.city.trim(),
       graduationYear: Number(profile.graduationYear),
     },
-    survey,
+    answers: {
+      ...answers,
+      targetRole: answers.targetRole.trim(),
+      currentSkills: answers.currentSkills.map((skill) => skill.key),
+    },
+    prefilledFromM0,
     completedAt: new Date().toISOString(),
     status: "completed",
   };
@@ -80,19 +74,20 @@ export default function App() {
 
   const [stage, setStage] = useState<Stage>(initialDraft?.stage ?? "profile");
   const [profile, setProfile] = useState<ProfileFormValues>(initialDraft?.profile ?? EMPTY_PROFILE);
-  const [answers, setAnswers] = useState<SurveyAnswers>(initialDraft?.answers ?? {});
-  const [currentQuestion, setCurrentQuestion] = useState(
-    Math.min(Math.max(initialDraft?.currentQuestion ?? 0, 0), TOTAL_QUESTIONS - 1),
+  const [answers, setAnswers] = useState<OnboardingAnswers>(initialDraft?.answers ?? EMPTY_ANSWERS);
+  const [currentStep, setCurrentStep] = useState(
+    Math.min(Math.max(initialDraft?.currentStep ?? 0, 0), TOTAL_STEPS - 1),
   );
+  const [prefilledFromM0, setPrefilledFromM0] = useState(initialDraft?.prefilledFromM0 ?? false);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
   const [completion, setCompletion] = useState<CompletionData | null>(null);
   const [toast, setToast] = useState<string | null>(
     initialDraft ? "Retomamos tu avance guardado en este dispositivo." : null,
   );
-  const [questionError, setQuestionError] = useState<string | null>(null);
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
 
   const stageHeadingRef = useRef<HTMLHeadingElement>(null);
-  const questionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const submittingRef = useRef(false);
   const isFirstRender = useRef(true);
   const toastTimer = useRef<number | undefined>(undefined);
@@ -110,23 +105,22 @@ export default function App() {
     return () => window.clearTimeout(toastTimer.current);
   }, [initialDraft]);
 
-  // Guardado temporal: cada cambio se guarda de inmediato; el aviso se muestra
-  // cuando el egresado hace una pausa, para no parpadear en cada tecla.
+  // Guardado temporal: cada cambio se guarda de inmediato; el aviso aparece en una pausa.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     if (stage === "done" || !hasProgress(profile, answers)) return;
-    const saved = saveDraft({ stage, profile, answers, currentQuestion });
+    const saved = saveDraft({ stage, profile, answers, currentStep, prefilledFromM0 });
     const pause = window.setTimeout(
       () => showToast(saved ? SAVED_MESSAGE : "Tu navegador no permite guardar el avance en este dispositivo."),
       900,
     );
     return () => window.clearTimeout(pause);
-  }, [stage, profile, answers, currentQuestion, showToast]);
+  }, [stage, profile, answers, currentStep, prefilledFromM0, showToast]);
 
-  // Foco: al cambiar de etapa va al título; al cambiar de pregunta, a la pregunta.
+  // Foco: al cambiar de etapa va al título; al cambiar de paso, al título del paso.
   const previousStage = useRef(stage);
   useEffect(() => {
     if (previousStage.current !== stage) {
@@ -136,18 +130,28 @@ export default function App() {
     }
   }, [stage]);
 
-  const previousQuestion = useRef(currentQuestion);
+  const previousStep = useRef(currentStep);
   useEffect(() => {
-    if (previousQuestion.current !== currentQuestion) {
-      previousQuestion.current = currentQuestion;
-      questionHeadingRef.current?.focus();
+    if (previousStep.current !== currentStep) {
+      previousStep.current = currentStep;
+      stepHeadingRef.current?.focus();
+      window.scrollTo({ top: 0 });
     }
-  }, [currentQuestion]);
+  }, [currentStep]);
+
+  const updateProfile = useCallback(<F extends ProfileField>(field: F, value: ProfileFormValues[F]) => {
+    setProfile((current) => ({ ...current, [field]: value }));
+  }, []);
+
+  const updateAnswers = useCallback((patch: Partial<OnboardingAnswers>) => {
+    setAnswers((current) => ({ ...current, ...patch }));
+    setStepErrors([]);
+  }, []);
 
   // Precarga desde M0: completa los campos vacíos y los que venían de una
   // precarga anterior (si cambia el documento), nunca lo que el egresado escribió.
   const m0Values = useRef<Partial<Record<ProfileField, string>>>({});
-  const m0Answers = useRef<SurveyAnswers>({});
+  const m0Role = useRef<string>("");
 
   const applyM0 = useCallback(
     (prefill: M0Prefill): number => {
@@ -156,9 +160,6 @@ export default function App() {
         firstName: prefill.profile.firstName,
         lastName: prefill.profile.lastName,
         email: prefill.profile.email,
-        phone: prefill.profile.phone,
-        country: prefill.profile.country,
-        city: prefill.profile.city,
         program: prefill.profile.program,
         graduationYear: prefill.profile.graduationYear ? String(prefill.profile.graduationYear) : "",
       };
@@ -166,7 +167,7 @@ export default function App() {
       for (const [field, value] of Object.entries(incoming) as [ProfileField, string][]) {
         if (!value) continue;
         const current = String(next[field] ?? "");
-        const replaceable = current === "" || current === EMPTY_PROFILE[field] || current === m0Values.current[field];
+        const replaceable = current === "" || current === m0Values.current[field];
         if (replaceable && current !== value) {
           (next as Record<ProfileField, unknown>)[field] = value;
           filled += 1;
@@ -174,61 +175,36 @@ export default function App() {
         m0Values.current[field] = value;
       }
       setProfile(next);
-
-      const nextAnswers: SurveyAnswers = { ...answers };
-      const status = prefill.survey.employmentStatus;
-      const currentStatus = nextAnswers.employmentStatus;
-      const statusEmpty = !Array.isArray(currentStatus) || currentStatus.length === 0;
-      if (status.length > 0 && (statusEmpty || currentStatus === m0Answers.current.employmentStatus)) {
-        nextAnswers.employmentStatus = status;
-        m0Answers.current.employmentStatus = status;
-      }
       const role = prefill.survey.targetRole;
-      if (role && (!nextAnswers.targetRole || nextAnswers.targetRole === m0Answers.current.targetRole)) {
-        nextAnswers.targetRole = role;
-        m0Answers.current.targetRole = role;
+      if (role && (!answers.targetRole || answers.targetRole === m0Role.current)) {
+        setAnswers((current) => ({ ...current, targetRole: role }));
+        m0Role.current = role;
       }
-      setAnswers(nextAnswers);
+      setPrefilledFromM0(true);
       return filled;
     },
-    [profile, answers],
+    [profile, answers.targetRole],
   );
 
-  const updateProfile = useCallback(<F extends ProfileField>(field: F, value: ProfileFormValues[F]) => {
-    setProfile((current) => ({ ...current, [field]: value }));
-  }, []);
-
-  const question = SURVEY_QUESTIONS[currentQuestion];
-  const answeredCount = SURVEY_QUESTIONS.filter((q) => isQuestionAnswered(q, answers)).length;
-  const isLast = currentQuestion === TOTAL_QUESTIONS - 1;
-  const currentAnswered = isQuestionAnswered(question, answers);
+  const stepValid = validateStep(currentStep, answers).length === 0;
+  const completedSteps = ONBOARDING_STEPS.filter((_, index) => validateStep(index, answers).length === 0).length;
+  const isLast = currentStep === TOTAL_STEPS - 1;
 
   function goNext() {
-    if (!currentAnswered) {
-      setQuestionError(
-        question.type === "text"
-          ? "Escribe tu respuesta para continuar."
-          : question.type === "multiple"
-            ? "Elige al menos una opción para continuar."
-            : "Elige una opción para continuar.",
-      );
+    const errors = validateStep(currentStep, answers);
+    if (errors.length) {
+      setStepErrors(errors);
       return;
     }
-    setQuestionError(null);
-    if (isLast) {
-      void submit();
-    } else {
-      setCurrentQuestion((index) => index + 1);
-    }
+    setStepErrors([]);
+    if (isLast) void submit();
+    else setCurrentStep((index) => index + 1);
   }
 
   function goPrevious() {
-    setQuestionError(null);
-    if (currentQuestion === 0) {
-      setStage("profile");
-    } else {
-      setCurrentQuestion((index) => index - 1);
-    }
+    setStepErrors([]);
+    if (currentStep === 0) setStage("profile");
+    else setCurrentStep((index) => index - 1);
   }
 
   async function submit() {
@@ -236,15 +212,14 @@ export default function App() {
     submittingRef.current = true;
     setSubmitStatus("submitting");
     try {
-      const registration = buildRegistration(profile, answers);
+      const registration = buildRegistration(profile, answers, prefilledFromM0);
       const result = await submitGraduateRegistration(registration);
       clearDraft();
       setCompletion({
         fullName: `${registration.profile.firstName} ${registration.profile.lastName}`,
         programLabel: labelFor(PROGRAMS, registration.profile.program),
         graduationYear: registration.profile.graduationYear,
-        answered: answeredCount,
-        total: TOTAL_QUESTIONS,
+        targetRole: registration.answers.targetRole,
         recommendations: result.recommendations ?? [],
       });
       setSubmitStatus("idle");
@@ -261,14 +236,15 @@ export default function App() {
   function restart() {
     clearDraft();
     m0Values.current = {};
-    m0Answers.current = {};
+    m0Role.current = "";
     setProfile(EMPTY_PROFILE);
-    setAnswers({});
-    setCurrentQuestion(0);
-    previousQuestion.current = 0;
+    setAnswers(EMPTY_ANSWERS);
+    setCurrentStep(0);
+    previousStep.current = 0;
+    setPrefilledFromM0(false);
     setCompletion(null);
     setSubmitStatus("idle");
-    setQuestionError(null);
+    setStepErrors([]);
     setToast(null);
     setStage("profile");
   }
@@ -315,33 +291,37 @@ export default function App() {
                     Tu proyección profesional
                   </h1>
                   <p>
-                    Tus respuestas ayudarán a UNIR a diseñar mejores servicios, programas y oportunidades para sus
-                    egresados.
+                    Cuatro pasos cortos. Con tus respuestas comparamos tu perfil con lo que pide hoy el mercado y te
+                    sugerimos programas de UNIR.
                   </p>
                 </header>
 
-                <SurveyProgress current={currentQuestion} total={TOTAL_QUESTIONS} answered={answeredCount} />
+                <SurveyProgress
+                  current={currentStep}
+                  total={TOTAL_STEPS}
+                  answered={completedSteps}
+                  label={ONBOARDING_STEPS[currentStep].title}
+                />
 
-                <div className={styles.pregunta}>
-                  <SurveyQuestion
-                    key={question.id}
-                    question={question}
-                    number={currentQuestion + 1}
-                    value={answers[question.id] ?? (question.type === "multiple" ? [] : "")}
-                    headingRef={questionHeadingRef}
-                    onSubmitText={goNext}
-                    onChange={(value) => {
-                      setAnswers((current) => ({ ...current, [question.id]: value }));
-                      setQuestionError(null);
-                      if (submitStatus === "error") setSubmitStatus("idle");
-                    }}
-                  />
-                </div>
+                <OnboardingStep
+                  key={currentStep}
+                  step={currentStep}
+                  answers={answers}
+                  onChange={updateAnswers}
+                  onEnter={goNext}
+                  headingRef={stepHeadingRef}
+                />
 
                 {/* Avisos y navegación. Las regiones vivas están siempre presentes y, vacías, no ocupan espacio. */}
                 <div className={styles.pie}>
                   <div aria-live="assertive">
-                    {questionError ? <p className={styles.avisoPregunta}>{questionError}</p> : null}
+                    {stepErrors.length ? (
+                      <ul className={styles.avisoPregunta}>
+                        {stepErrors.map((error) => (
+                          <li key={error}>{error}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                   <div role="alert">
                     {submitStatus === "error" ? (
@@ -365,9 +345,9 @@ export default function App() {
                       className={buttons.primario}
                       onClick={goNext}
                       disabled={submitting}
-                      aria-disabled={!currentAnswered || undefined}
+                      aria-disabled={!stepValid || undefined}
                     >
-                      {submitting ? "Enviando…" : isLast ? "Enviar respuestas" : "Siguiente"}
+                      {submitting ? "Enviando…" : isLast ? "Ver mi ruta profesional" : "Siguiente"}
                     </button>
                   </div>
                 </div>

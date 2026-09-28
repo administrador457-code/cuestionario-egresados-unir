@@ -1,0 +1,174 @@
+/* Buscadores con sugerencias: cargo (RoleCombobox) y habilidades (SkillPicker). */
+.contenedor {
+  position: relative;
+  display: grid;
+  gap: 0.375rem;
+}
+
+.selector {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.etiqueta {
+  font-size: var(--texto-etiqueta);
+  font-weight: 600;
+}
+
+.campo {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--borde-fuerte);
+  border-radius: var(--radio-control);
+  background: var(--blanco);
+  font-size: 1.0625rem;
+}
+
+.campo:focus-visible {
+  border-color: var(--rojo-oscuro);
+}
+
+.campo::placeholder {
+  color: #8e8c97;
+}
+
+.campo:disabled {
+  background: var(--fondo);
+  cursor: not-allowed;
+}
+
+.lista {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: 0.375rem;
+  list-style: none;
+  max-height: 18rem;
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--blanco);
+  box-shadow: var(--sombra);
+}
+
+.lista[hidden] {
+  display: none;
+}
+
+/* Cuando la lista va dentro del flujo (el contador queda debajo), no tapa el contador */
+.contenedor > .lista {
+  top: 58px;
+}
+
+.opcion {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.opcion:hover,
+.activa {
+  background: var(--rojo-suave);
+}
+
+.activa {
+  box-shadow: inset 3px 0 0 var(--rojo);
+}
+
+.demanda {
+  flex-shrink: 0;
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+  font-variant-numeric: tabular-nums;
+}
+
+.contador,
+.nota,
+.estado {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}
+
+.contador {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.estado {
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.elegidas,
+.sugeridas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3125rem 0.375rem 0.3125rem 0.875rem;
+  border: 1.5px solid var(--rojo);
+  border-radius: 999px;
+  background: var(--rojo-suave);
+  font-weight: 600;
+}
+
+.quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--rojo-oscuro);
+  cursor: pointer;
+}
+
+.quitar:hover {
+  background: rgba(200, 16, 46, 0.12);
+}
+
+.populares {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.sugerida {
+  min-height: 40px;
+  padding: 0.375rem 0.875rem;
+  border: 1.5px dashed var(--borde-fuerte);
+  border-radius: 999px;
+  background: var(--blanco);
+  color: var(--texto);
+  font-size: var(--texto-pequeno);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sugerida:hover:not(:disabled) {
+  border-style: solid;
+  border-color: var(--rojo);
+}
+
+.sugerida:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

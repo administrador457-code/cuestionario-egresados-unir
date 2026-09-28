@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { COUNTRIES, DOCUMENT_TYPES, PROGRAMS, graduationYears } from "../config/formOptions";
+import { DOCUMENT_TYPES, PROGRAMS, graduationYears } from "../config/formOptions";
 import { firstInvalidField, validateProfile, validateProfileField } from "../lib/validation";
 import { lookupM0 } from "../services/m0Service";
 import type { M0Prefill, ProfileErrors, ProfileField, ProfileFormValues, SelectOption } from "../types/graduate";
@@ -101,8 +101,8 @@ export function GraduateRegistrationForm({ values, onChange, onContinue, onPrefi
   return (
     <form className={styles.formulario} onSubmit={handleSubmit} noValidate aria-describedby="nota-obligatorios">
       <p id="nota-obligatorios" className={styles.nota}>
-        Todos los campos son obligatorios. Empieza por tu documento: si ya estás en nuestros registros, completamos
-        el resto por ti.
+        Todos los campos son obligatorios. Empieza por tu documento: si ya estás en los registros de UNIR,
+        completamos el resto por ti.
       </p>
 
       {errorCount > 0 ? (
@@ -134,25 +134,9 @@ export function GraduateRegistrationForm({ values, onChange, onContinue, onPrefi
           onValue={(v) => update("lastName", v)}
         />
         <TextField
-          field="email" label="Correo electrónico" type="email" autoComplete="email" inputMode="email"
+          field="email" label="Correo electrónico" type="email" autoComplete="email" inputMode="email" wide
           value={values.email} error={errors.email} inputRef={register("email")}
           onValue={(v) => update("email", v)}
-        />
-        <TextField
-          field="phone" label="Teléfono móvil" type="tel" autoComplete="tel" inputMode="tel"
-          hint="Incluye el indicativo si vives fuera de Colombia."
-          value={values.phone} error={errors.phone} inputRef={register("phone")}
-          onValue={(v) => update("phone", v)}
-        />
-        <SelectField
-          field="country" label="País de residencia" options={COUNTRIES} autoComplete="country-name"
-          value={values.country} error={errors.country} selectRef={register("country")}
-          onValue={(v) => update("country", v)}
-        />
-        <TextField
-          field="city" label="Ciudad de residencia" autoComplete="address-level2"
-          value={values.city} error={errors.city} inputRef={register("city")}
-          onValue={(v) => update("city", v)}
         />
         <SelectField
           field="program" label="Programa cursado en UNIR" options={PROGRAMS} wide
@@ -219,8 +203,7 @@ function LookupNotice({ state }: { state: LookupState }) {
         {prefill.context.currentRole ? (
           <p>
             En ese registro trabajabas como <strong>{prefill.context.currentRole}</strong>
-            {prefill.context.company ? ` en ${prefill.context.company.replace(/\.$/, "")}` : ""}. Si ya no es así, lo
-            actualizas en el cuestionario.
+            {prefill.context.company ? ` en ${prefill.context.company.replace(/\.$/, "")}` : ""}.
           </p>
         ) : null}
       </div>
@@ -280,6 +263,7 @@ function FieldShell({ field, label, error, hint, wide, children }: FieldShellPro
 interface TextFieldProps {
   field: ProfileField;
   label: string;
+  wide?: boolean;
   value: string;
   error?: string;
   hint?: string;
@@ -290,9 +274,9 @@ interface TextFieldProps {
   onValue: (value: string) => void;
 }
 
-function TextField({ field, label, value, error, hint, type = "text", autoComplete, inputMode, inputRef, onValue }: TextFieldProps) {
+function TextField({ field, label, wide, value, error, hint, type = "text", autoComplete, inputMode, inputRef, onValue }: TextFieldProps) {
   return (
-    <FieldShell field={field} label={label} error={error} hint={hint}>
+    <FieldShell field={field} label={label} error={error} hint={hint} wide={wide}>
       {(describedBy) => (
         <input
           ref={inputRef}

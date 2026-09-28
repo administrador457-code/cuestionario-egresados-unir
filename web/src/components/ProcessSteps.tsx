@@ -3,7 +3,7 @@ import styles from "./ProcessSteps.module.css";
 
 const STEPS: { stage: Stage; title: string; detail: string }[] = [
   { stage: "profile", title: "Tu perfil", detail: "Datos de contacto." },
-  { stage: "survey", title: "Tu futuro", detail: "10 preguntas." },
+  { stage: "survey", title: "Tu futuro", detail: "4 pasos." },
   { stage: "done", title: "Finalizar", detail: "Revisión y envío." },
 ];
 

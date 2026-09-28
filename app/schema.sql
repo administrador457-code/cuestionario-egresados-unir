@@ -154,3 +154,66 @@ CREATE TABLE IF NOT EXISTS m0_egresados (
     es_demo                 BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (tipo_documento, numero_documento)
 );
+
+-- ---------------------------------------------------------------------------
+-- Catálogo de mercado (lo recalcula scripts/sincronizar_programas.py a partir
+-- de las vacantes vigentes de la plataforma de pertinencia, en solo lectura).
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS habilidades (
+    clave         TEXT PRIMARY KEY,          -- normalizada (app/habilidades.py)
+    nombre        TEXT NOT NULL,             -- cómo se muestra
+    categoria     TEXT,
+    vacantes      INTEGER NOT NULL DEFAULT 0,  -- vacantes vigentes que la piden
+    en_programas  BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS cargos_mercado (
+    clave     TEXT PRIMARY KEY,
+    nombre    TEXT NOT NULL,
+    vacantes  INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_habilidades_vacantes ON habilidades (vacantes DESC);
+CREATE INDEX IF NOT EXISTS idx_cargos_vacantes ON cargos_mercado (vacantes DESC);
+
+-- Onboarding (4 pantallas): lo que el egresado quiere lograr ahora.
+-- Lo que UNIR ya sabe de él está en M0 (m0_egresados).
+CREATE TABLE IF NOT EXISTS perfiles_onboarding (
+    id                     BIGSERIAL PRIMARY KEY,
+    token                  UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    version                INTEGER NOT NULL,
+    tipo_documento         TEXT NOT NULL,
+    numero_documento       TEXT NOT NULL,
+    nombres                TEXT NOT NULL,
+    apellidos              TEXT NOT NULL,
+    email                  TEXT NOT NULL,
+    programa_cursado_id    INTEGER,
+    anio_graduacion        INTEGER NOT NULL,
+    acepta_tratamiento_datos BOOLEAN NOT NULL,
+    aceptado_en            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    precargado_de_m0       BOOLEAN NOT NULL DEFAULT FALSE,
+    cargo_objetivo         TEXT NOT NULL,
+    objetivo_profesional   TEXT NOT NULL,
+    areas                  TEXT[] NOT NULL,
+    sectores               TEXT[] NOT NULL,
+    habilidades_actuales   TEXT[] NOT NULL,    -- claves de la tabla habilidades
+    tipos_formacion        TEXT[] NOT NULL,
+    creado_en              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    actualizado_en         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tipo_documento, numero_documento)
+);
+
+CREATE TABLE IF NOT EXISTS recomendaciones_onboarding (
+    id               BIGSERIAL PRIMARY KEY,
+    perfil_id        BIGINT NOT NULL REFERENCES perfiles_onboarding(id) ON DELETE CASCADE,
+    posicion         INTEGER NOT NULL,
+    programa_id      INTEGER NOT NULL,
+    programa_nombre  TEXT NOT NULL,
+    puntaje          NUMERIC(5, 1) NOT NULL,
+    desglose         JSONB NOT NULL DEFAULT '{}'::jsonb,
+    razones          JSONB NOT NULL DEFAULT '[]'::jsonb,
+    generado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_recomendaciones_onboarding ON recomendaciones_onboarding (perfil_id, posicion);
+CREATE INDEX IF NOT EXISTS idx_onboarding_habilidades ON perfiles_onboarding USING GIN (habilidades_actuales);

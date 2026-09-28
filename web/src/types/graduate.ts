@@ -1,40 +1,43 @@
-/** Modelo de datos del registro de egresados. */
+/** Modelo de datos del registro y onboarding de egresados. */
 
+/** Datos mínimos del egresado: lo que lo identifica y lo cruza con M0. */
 export interface GraduateProfile {
   firstName: string;
   lastName: string;
   documentType: string;
   documentNumber: string;
   email: string;
-  phone: string;
-  country: string;
-  city: string;
   /** Valor estable del programa (id del catálogo UNIR u "otro"). */
   program: string;
   graduationYear: number;
   privacyConsent: boolean;
 }
 
-/**
- * Respuestas del cuestionario. Las listas (string[]) son preguntas de
- * selección múltiple; el cargo es texto y la experiencia, una sola opción.
- */
-export interface GraduateSurvey {
-  employmentStatus: string[];
-  targetRole: string;
-  preferredEducationType: string[];
-  preferredPerformanceArea: string[];
-  preferredEconomicSector: string[];
-  yearsOfExperience: string;
-  prioritySkill: string[];
-  preferredModality: string[];
-  mainEducationBarrier: string[];
-  preferredGraduateService: string[];
+/** Habilidad del catálogo normalizado (misma clave que usan vacantes y programas). */
+export interface SkillRef {
+  key: string;
+  name: string;
 }
 
+/** Las 4 pantallas del onboarding. */
+export interface OnboardingAnswers {
+  /** 1. Tu objetivo */
+  targetRole: string;
+  careerGoal: string;
+  /** 2. Dónde te visualizas */
+  performanceAreas: string[];
+  economicSectors: string[];
+  /** 3. Lo que sabes */
+  currentSkills: SkillRef[];
+  /** 4. Tu formación */
+  educationTypes: string[];
+}
+
+/** Lo que se envía a la API (las habilidades viajan solo como claves). */
 export interface GraduateRegistration {
   profile: GraduateProfile;
-  survey: GraduateSurvey;
+  answers: Omit<OnboardingAnswers, "currentSkills"> & { currentSkills: string[] };
+  prefilledFromM0: boolean;
   completedAt: string;
   status: "draft" | "completed";
 }
@@ -50,10 +53,6 @@ export type ProfileFormValues = Omit<GraduateProfile, "graduationYear"> & {
 export type ProfileField = keyof ProfileFormValues;
 export type ProfileErrors = Partial<Record<ProfileField, string>>;
 
-export type SurveyField = keyof GraduateSurvey;
-export type SurveyAnswerValue = string | string[];
-export type SurveyAnswers = Partial<Record<SurveyField, SurveyAnswerValue>>;
-
 /** Etapas del proceso que muestra el panel lateral. */
 export type Stage = "profile" | "survey" | "done";
 
@@ -62,45 +61,14 @@ export interface SelectOption {
   label: string;
 }
 
-interface BaseQuestion {
-  id: SurveyField;
-  /** Etiqueta corta para resúmenes. */
-  shortLabel: string;
-  text: string;
-  help: string;
-}
-
-/** Una sola opción (radio). */
-export interface ChoiceQuestion extends BaseQuestion {
-  type: "choice";
-  options: SelectOption[];
-}
-
-/** Varias opciones (casillas). */
-export interface MultipleChoiceQuestion extends BaseQuestion {
-  type: "multiple";
-  options: SelectOption[];
-  /** Máximo de opciones; sin valor = sin límite. */
-  maxSelections?: number;
-  /** Opciones que no se combinan con otras (p. ej. "No tengo barreras"). */
-  exclusiveValues?: string[];
-}
-
-export interface TextQuestion extends BaseQuestion {
-  type: "text";
-  placeholder: string;
-  maxLength: number;
-}
-
-export type SurveyQuestionConfig = ChoiceQuestion | MultipleChoiceQuestion | TextQuestion;
-
 /** Lo que se guarda en localStorage mientras el egresado no termina. */
 export interface GraduateDraft {
-  version: 2;
+  version: 3;
   stage: Exclude<Stage, "done">;
   profile: ProfileFormValues;
-  answers: SurveyAnswers;
-  currentQuestion: number;
+  answers: OnboardingAnswers;
+  currentStep: number;
+  prefilledFromM0: boolean;
   savedAt: string;
 }
 
@@ -141,4 +109,18 @@ export interface M0Prefill {
     employed: boolean | null;
     surveyDate: string | null;
   };
+}
+
+/** Sugerencia de cargo tomada de las vacantes vigentes. */
+export interface RoleSuggestion {
+  name: string;
+  /** Vacantes vigentes con ese cargo. */
+  demand: number;
+}
+
+/** Habilidad sugerida por el catálogo. */
+export interface SkillSuggestion extends SkillRef {
+  category: string | null;
+  /** Vacantes vigentes que la piden. */
+  demand: number;
 }

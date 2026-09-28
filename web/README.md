@@ -1,7 +1,8 @@
 # Registro y caracterización de egresados UNIR (frontend)
 
 Aplicación React + TypeScript (Vite) para que el egresado actualice sus datos y
-responda 10 preguntas sobre su proyección profesional, una por pantalla.
+complete un onboarding de 4 pantallas (objetivo, dónde se visualiza, lo que sabe
+y formación). Si su documento está en M0, sus datos se precargan.
 
 Las preguntas cerradas son de selección múltiple (casillas), salvo "años de
 experiencia", que es de una sola opción. Algunas tienen máximo de 3 opciones

@@ -1,0 +1,200 @@
+{
+ "habilidades": [
+  {
+   "nombre": "business intelligence",
+   "categoria": "Unknown",
+   "vacantes": 287
+  },
+  {
+   "nombre": "BI",
+   "categoria": "Unclassified",
+   "vacantes": 86
+  },
+  {
+   "nombre": "security",
+   "categoria": "Governance",
+   "vacantes": 273
+  },
+  {
+   "nombre": "sql",
+   "categoria": "Unknown",
+   "vacantes": 243
+  },
+  {
+   "nombre": "power bi",
+   "categoria": "Unknown",
+   "vacantes": 239
+  },
+  {
+   "nombre": "trabajo en equipo",
+   "categoria": "Unknown",
+   "vacantes": 239
+  },
+  {
+   "nombre": "trabajo en equipo",
+   "categoria": "Soft Skills",
+   "vacantes": 107
+  },
+  {
+   "nombre": "compliance",
+   "categoria": "Governance",
+   "vacantes": 232
+  },
+  {
+   "nombre": "python",
+   "categoria": "Unknown",
+   "vacantes": 198
+  },
+  {
+   "nombre": "Python",
+   "categoria": "Programming / Analytics",
+   "vacantes": 108
+  },
+  {
+   "nombre": "comunicacion",
+   "categoria": "Soft Skills",
+   "vacantes": 169
+  },
+  {
+   "nombre": "ia",
+   "categoria": "Unknown",
+   "vacantes": 164
+  },
+  {
+   "nombre": "AWS",
+   "categoria": "Cloud Analytics",
+   "vacantes": 153
+  },
+  {
+   "nombre": "Azure",
+   "categoria": "Cloud Analytics",
+   "vacantes": 151
+  },
+  {
+   "nombre": "liderazgo",
+   "categoria": "Unknown",
+   "vacantes": 138
+  },
+  {
+   "nombre": "liderazgo",
+   "categoria": "Soft Skills",
+   "vacantes": 96
+  },
+  {
+   "nombre": "reporting",
+   "categoria": "BI & Visualization",
+   "vacantes": 129
+  },
+  {
+   "nombre": "excel avanzado",
+   "categoria": "Unknown",
+   "vacantes": 119
+  },
+  {
+   "nombre": "APIs",
+   "categoria": "Programming / Analytics",
+   "vacantes": 117
+  },
+  {
+   "nombre": "api",
+   "categoria": "Unknown",
+   "vacantes": 102
+  },
+  {
+   "nombre": "pensamiento analitico",
+   "categoria": "Soft Skills",
+   "vacantes": 114
+  },
+  {
+   "nombre": "Oracle",
+   "categoria": "Databases",
+   "vacantes": 113
+  },
+  {
+   "nombre": "risk analysis",
+   "categoria": "Risk & Security",
+   "vacantes": 102
+  },
+  {
+   "nombre": "Agile",
+   "categoria": "Methodologies",
+   "vacantes": 88
+  },
+  {
+   "nombre": "machine learning",
+   "categoria": "Unknown",
+   "vacantes": 87
+  },
+  {
+   "nombre": "negociación",
+   "categoria": "Soft Skills",
+   "vacantes": 40
+  },
+  {
+   "nombre": "ventas",
+   "categoria": "Unknown",
+   "vacantes": 55
+  },
+  {
+   "nombre": "CRM",
+   "categoria": "Unknown",
+   "vacantes": 30
+  },
+  {
+   "nombre": "marketing digital",
+   "categoria": "Unknown",
+   "vacantes": 25
+  },
+  {
+   "nombre": "pedagogía",
+   "categoria": "Unknown",
+   "vacantes": 12
+  }
+ ],
+ "cargos": [
+  {
+   "titulo": "Analista de datos",
+   "vacantes": 40
+  },
+  {
+   "titulo": "Analista de Datos - Bogotá",
+   "vacantes": 12
+  },
+  {
+   "titulo": "ANALISTA DE DATOS (A)",
+   "vacantes": 5
+  },
+  {
+   "titulo": "Científico de datos",
+   "vacantes": 14
+  },
+  {
+   "titulo": "Gerente Comercial",
+   "vacantes": 9
+  },
+  {
+   "titulo": "Gerente comercial - Barranquilla",
+   "vacantes": 3
+  },
+  {
+   "titulo": "Ejecutivo comercial urgente",
+   "vacantes": 20
+  },
+  {
+   "titulo": "Coordinador académico",
+   "vacantes": 4
+  },
+  {
+   "titulo": "Docente de matemáticas",
+   "vacantes": 6
+  },
+  {
+   "titulo": "Ingeniero de datos",
+   "vacantes": 18
+  },
+  {
+   "titulo": "Data Analyst",
+   "vacantes": 22
+  }
+ ]
+}

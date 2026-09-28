@@ -79,7 +79,8 @@
 }
 
 .avisoPregunta {
-  margin-bottom: 1rem;
+  margin: 0 0 1rem;
+  padding-left: 1.125rem;
   color: var(--rojo-oscuro);
   font-weight: 600;
 }

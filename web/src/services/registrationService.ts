@@ -5,8 +5,8 @@ import type { GraduateRegistration, ProgramRecommendation } from "../types/gradu
  * ============================================================================
  *  CONEXIÓN CON LA API
  * ============================================================================
- * Envía el registro a POST {API_URL}/api/registros (FastAPI en Railway).
- * El backend lo guarda en la base de datos (tabla registros_egresados) y
+ * Envía el onboarding a POST {API_URL}/api/onboarding (FastAPI en Railway).
+ * El backend lo guarda en la base de datos (tabla perfiles_onboarding) y
  * devuelve las recomendaciones de programas UNIR.
  *
  * Los componentes solo dependen de que esta función resuelva con un
@@ -42,7 +42,7 @@ export async function submitGraduateRegistration(data: GraduateRegistration): Pr
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const response = await fetch(`${API_URL}/api/registros`, {
+    const response = await fetch(`${API_URL}/api/onboarding`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

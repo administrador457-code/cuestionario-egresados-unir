@@ -84,6 +84,11 @@ tests/
 | POST | `/api/registros` | Registro nuevo (frontend `web/`): guarda y devuelve recomendaciones |
 | GET | `/api/registros/{token}/recomendaciones` | Recomendaciones de un registro nuevo |
 | GET | `/api/m0/{tipo}/{numero}` | Precarga desde la base M0 (Momento 0) por documento |
+| GET | `/api/habilidades?q=` | Catálogo normalizado de habilidades (vacantes vigentes + programas) |
+| GET | `/api/cargos?q=` | Cargos de las vacantes vigentes, para el buscador |
+| GET | `/api/areas-sugeridas?cargo=` | Áreas de desempeño que sugiere un cargo |
+| POST | `/api/onboarding` | Onboarding de 4 pantallas: guarda y devuelve recomendaciones |
+| GET | `/api/onboarding/{token}/recomendaciones` | Recomendaciones de un onboarding |
 
 El `token` es un UUID aleatorio: las URL de resultados no exponen el id ni el
 correo del egresado.
@@ -122,6 +127,17 @@ Proyecto de Railway `app-desarrollo-egresados-unir` (su `postgres` original no s
 | `Postgres` | Base propia del cuestionario | Plantilla de Railway |
 | `cuestionario-web` | API + frontend | Arranque `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/api/health`. Variables `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `CORS_ORIGINS` (dominios del frontend de Vercel) y `M0_DEMO=true` (carga los egresados ficticios de M0) |
 | `cuestionario-sync` | Sincronización diaria del catálogo | Comando `python scripts/sincronizar_programas.py`, cron `0 11 * * *` (6 a. m. Colombia), reinicio `NEVER`. Variables `DATABASE_URL` y `PROGRAMAS_DATABASE_URL` |
+
+## Onboarding de 4 pantallas y catálogo normalizado
+
+El frontend `web/` pide solo lo que M0 no sabe: cargo objetivo y objetivo
+profesional; áreas y sectores; habilidades que domina; tipo de formación.
+
+Las habilidades salen de la tabla `habilidades`, que `sincronizar_programas.py`
+recalcula cada día desde las vacantes vigentes de pertinencia (solo lectura) y
+las skills de los programas. `app/habilidades.py` unifica mayúsculas y
+sinónimos ("Python"/"python", "BI"/"business intelligence", "APIs"/"api"...);
+para agregar un sinónimo se edita `SINONIMOS` en ese archivo.
 
 ## Precarga desde M0
 

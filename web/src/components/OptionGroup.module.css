@@ -1,0 +1,53 @@
+.grupo {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.625rem;
+}
+
+.leyenda {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--texto);
+}
+
+.leyenda + * {
+  clear: both;
+}
+
+.ayuda {
+  color: var(--texto-secundario);
+  max-width: 60ch;
+}
+
+.seleccion {
+  justify-self: start;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--fondo);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.opciones {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 0.25rem;
+}
+
+.dosColumnas {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .dosColumnas {
+    grid-template-columns: 1fr;
+  }
+}

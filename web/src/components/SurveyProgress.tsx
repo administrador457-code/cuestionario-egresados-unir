@@ -3,20 +3,24 @@ import styles from "./SurveyProgress.module.css";
 interface SurveyProgressProps {
   current: number; // índice 0..total-1
   total: number;
+  /** Pantallas completas (con todas sus respuestas válidas). */
   answered: number;
+  /** Nombre de la pantalla actual, p. ej. "Tu objetivo". */
+  label?: string;
 }
 
-export function SurveyProgress({ current, total, answered }: SurveyProgressProps) {
+export function SurveyProgress({ current, total, answered, label }: SurveyProgressProps) {
   const percent = Math.round((answered / total) * 100);
   return (
     <div className={styles.progreso}>
       <div className={styles.fila}>
         {/* aria-live: el lector de pantalla anuncia cada cambio de pregunta */}
         <p className={styles.contador} aria-live="polite">
-          Pregunta {current + 1} de {total}
+          Paso {current + 1} de {total}
+          {label ? <span className={styles.nombrePaso}> · {label}</span> : null}
         </p>
         <p className={styles.respondidas}>
-          {answered} de {total} respondidas
+          {answered} de {total} completos
         </p>
       </div>
       <div
@@ -26,7 +30,7 @@ export function SurveyProgress({ current, total, answered }: SurveyProgressProps
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={answered}
-        aria-valuetext={`${answered} de ${total} preguntas respondidas`}
+        aria-valuetext={`${answered} de ${total} pasos completos`}
       >
         <span className={styles.relleno} style={{ width: `${percent}%` }} />
       </div>
