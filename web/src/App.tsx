@@ -14,6 +14,7 @@ import { submitGraduateRegistration } from "./services/registrationService";
 import buttons from "./styles/buttons.module.css";
 import type {
   GraduateRegistration,
+  M0Prefill,
   GraduateSurvey,
   ProfileField,
   ProfileFormValues,
@@ -143,6 +144,56 @@ export default function App() {
     }
   }, [currentQuestion]);
 
+  // Precarga desde M0: completa los campos vacíos y los que venían de una
+  // precarga anterior (si cambia el documento), nunca lo que el egresado escribió.
+  const m0Values = useRef<Partial<Record<ProfileField, string>>>({});
+  const m0Answers = useRef<SurveyAnswers>({});
+
+  const applyM0 = useCallback(
+    (prefill: M0Prefill): number => {
+      let filled = 0;
+      const incoming: Partial<Record<ProfileField, string>> = {
+        firstName: prefill.profile.firstName,
+        lastName: prefill.profile.lastName,
+        email: prefill.profile.email,
+        phone: prefill.profile.phone,
+        country: prefill.profile.country,
+        city: prefill.profile.city,
+        program: prefill.profile.program,
+        graduationYear: prefill.profile.graduationYear ? String(prefill.profile.graduationYear) : "",
+      };
+      const next = { ...profile };
+      for (const [field, value] of Object.entries(incoming) as [ProfileField, string][]) {
+        if (!value) continue;
+        const current = String(next[field] ?? "");
+        const replaceable = current === "" || current === EMPTY_PROFILE[field] || current === m0Values.current[field];
+        if (replaceable && current !== value) {
+          (next as Record<ProfileField, unknown>)[field] = value;
+          filled += 1;
+        }
+        m0Values.current[field] = value;
+      }
+      setProfile(next);
+
+      const nextAnswers: SurveyAnswers = { ...answers };
+      const status = prefill.survey.employmentStatus;
+      const currentStatus = nextAnswers.employmentStatus;
+      const statusEmpty = !Array.isArray(currentStatus) || currentStatus.length === 0;
+      if (status.length > 0 && (statusEmpty || currentStatus === m0Answers.current.employmentStatus)) {
+        nextAnswers.employmentStatus = status;
+        m0Answers.current.employmentStatus = status;
+      }
+      const role = prefill.survey.targetRole;
+      if (role && (!nextAnswers.targetRole || nextAnswers.targetRole === m0Answers.current.targetRole)) {
+        nextAnswers.targetRole = role;
+        m0Answers.current.targetRole = role;
+      }
+      setAnswers(nextAnswers);
+      return filled;
+    },
+    [profile, answers],
+  );
+
   const updateProfile = useCallback(<F extends ProfileField>(field: F, value: ProfileFormValues[F]) => {
     setProfile((current) => ({ ...current, [field]: value }));
   }, []);
@@ -209,6 +260,8 @@ export default function App() {
 
   function restart() {
     clearDraft();
+    m0Values.current = {};
+    m0Answers.current = {};
     setProfile(EMPTY_PROFILE);
     setAnswers({});
     setCurrentQuestion(0);
@@ -246,7 +299,12 @@ export default function App() {
                     UNIR.
                   </p>
                 </header>
-                <GraduateRegistrationForm values={profile} onChange={updateProfile} onContinue={() => setStage("survey")} />
+                <GraduateRegistrationForm
+                  values={profile}
+                  onChange={updateProfile}
+                  onPrefill={applyM0}
+                  onContinue={() => setStage("survey")}
+                />
               </section>
             ) : null}
 

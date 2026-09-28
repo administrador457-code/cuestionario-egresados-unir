@@ -26,9 +26,15 @@ def conexion() -> Iterator[psycopg.Connection]:
         yield conn
 
 
+M0_DEMO_PATH = Path(__file__).with_name("m0_demo.sql")
+
+
 def aplicar_esquema() -> None:
     with conexion() as conn:
         conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
+        # Registros ficticios de M0 solo si se pide explícitamente (M0_DEMO=true).
+        if os.environ.get("M0_DEMO", "").strip().lower() in ("1", "true", "si", "sí"):
+            conn.execute(M0_DEMO_PATH.read_text(encoding="utf-8"))
 
 
 def listar_programas(solo_activos: bool = True) -> list[dict[str, Any]]:
@@ -213,3 +219,12 @@ def obtener_recomendaciones_registro(token: str) -> dict[str, Any] | None:
         ).fetchall()
     return {"nombre": registro["nombres"], "cargo_aspirado": registro["cargo_aspirado"],
             "recomendaciones": recomendaciones}
+
+
+# ------------------------------------------------------------------ M0
+def buscar_m0(tipo_documento: str, numero_documento: str) -> dict[str, Any] | None:
+    with conexion() as conn:
+        return conn.execute(
+            "SELECT * FROM m0_egresados WHERE tipo_documento = %s AND upper(numero_documento) = upper(%s)",
+            (tipo_documento, numero_documento),
+        ).fetchone()

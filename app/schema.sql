@@ -118,3 +118,39 @@ CREATE TABLE IF NOT EXISTS recomendaciones_registro (
 CREATE INDEX IF NOT EXISTS idx_recomendaciones_registro ON recomendaciones_registro (registro_id, posicion);
 CREATE INDEX IF NOT EXISTS idx_registros_areas ON registros_egresados USING GIN (areas_desempeno);
 CREATE INDEX IF NOT EXISTS idx_registros_email ON registros_egresados (email);
+
+-- ---------------------------------------------------------------------------
+-- M0: base institucional de la encuesta Momento 0 (lo que UNIR ya sabe del
+-- egresado). Mientras no se conecte la base real, aquí viven registros DEMO
+-- (es_demo = TRUE) que carga app/m0_demo.sql cuando M0_DEMO=true.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS m0_egresados (
+    tipo_documento          TEXT NOT NULL,
+    numero_documento        TEXT NOT NULL,
+    nombres                 TEXT NOT NULL,
+    apellidos               TEXT NOT NULL,
+    correo                  TEXT,
+    telefono                TEXT,
+    pais                    TEXT,
+    ciudad                  TEXT,
+    programa_id             INTEGER,              -- id del catálogo programas_unir
+    titulo_obtenido         TEXT,
+    fecha_inicio_estudios   DATE,
+    fecha_titulo            DATE,
+    empleado_antes          BOOLEAN,
+    empleado_actual         BOOLEAN,
+    cargo_actual            TEXT,
+    fecha_inicio_empleo     DATE,
+    jornada                 TEXT,                 -- completa | parcial
+    tipo_empleo             TEXT,                 -- cuenta_propia | privado | publico
+    empresa                 TEXT,
+    empresa_ciudad          TEXT,
+    titulacion_permitio     TEXT,                 -- A | B | C (pregunta de M0)
+    salario_previo          TEXT,                 -- rango en SMMLV
+    salario_actual          TEXT,
+    motivos_desempleo       TEXT[] NOT NULL DEFAULT '{}',
+    trabajo_esperado        TEXT,
+    fecha_encuesta          DATE,
+    es_demo                 BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (tipo_documento, numero_documento)
+);

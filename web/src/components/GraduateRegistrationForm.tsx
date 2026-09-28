@@ -1,7 +1,8 @@
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { COUNTRIES, DOCUMENT_TYPES, PROGRAMS, graduationYears } from "../config/formOptions";
 import { firstInvalidField, validateProfile, validateProfileField } from "../lib/validation";
-import type { ProfileErrors, ProfileField, ProfileFormValues, SelectOption } from "../types/graduate";
+import { lookupM0 } from "../services/m0Service";
+import type { M0Prefill, ProfileErrors, ProfileField, ProfileFormValues, SelectOption } from "../types/graduate";
 import buttons from "../styles/buttons.module.css";
 import { FormError } from "./FormError";
 import styles from "./GraduateRegistrationForm.module.css";
@@ -10,15 +11,65 @@ interface GraduateRegistrationFormProps {
   values: ProfileFormValues;
   onChange: <F extends ProfileField>(field: F, value: ProfileFormValues[F]) => void;
   onContinue: () => void;
+  /** Se llama cuando el documento se encuentra en la base M0; devuelve cuántos campos completó. */
+  onPrefill: (prefill: M0Prefill) => number;
 }
+
+type LookupState =
+  | { kind: "idle" }
+  | { kind: "searching" }
+  | { kind: "found"; prefill: M0Prefill; filled: number }
+  | { kind: "notFound" }
+  | { kind: "error" };
+
+const DOCUMENT_READY = /^[A-Za-z0-9-]{6,20}$/;
+const LOOKUP_DELAY_MS = 600;
 
 type FieldElement = HTMLInputElement | HTMLSelectElement;
 
 const YEARS = graduationYears();
 
-export function GraduateRegistrationForm({ values, onChange, onContinue }: GraduateRegistrationFormProps) {
+export function GraduateRegistrationForm({ values, onChange, onContinue, onPrefill }: GraduateRegistrationFormProps) {
   const [errors, setErrors] = useState<ProfileErrors>({});
+  const [lookup, setLookup] = useState<LookupState>({ kind: "idle" });
   const fieldRefs = useRef<Partial<Record<ProfileField, FieldElement | null>>>({});
+  const lastLookup = useRef<string>("");
+
+  // Al escribir tipo y número de documento, se busca al egresado en M0 y se
+  // precargan sus datos. Espera a que deje de escribir para no consultar en cada tecla.
+  useEffect(() => {
+    const number = values.documentNumber.trim();
+    const key = `${values.documentType}:${number.toUpperCase()}`;
+    if (!values.documentType || !DOCUMENT_READY.test(number)) {
+      lastLookup.current = "";
+      setLookup({ kind: "idle" });
+      return;
+    }
+    if (key === lastLookup.current) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setLookup({ kind: "searching" });
+      try {
+        const prefill = await lookupM0(values.documentType, number, controller.signal);
+        lastLookup.current = key;
+        if (!prefill) {
+          setLookup({ kind: "notFound" });
+          return;
+        }
+        const filled = onPrefill(prefill);
+        setErrors({});
+        setLookup({ kind: "found", prefill, filled });
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.warn("No se pudo consultar M0:", error);
+        setLookup({ kind: "error" });
+      }
+    }, LOOKUP_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [values.documentType, values.documentNumber, onPrefill]);
 
   function update<F extends ProfileField>(field: F, value: ProfileFormValues[F]) {
     onChange(field, value);
@@ -50,7 +101,8 @@ export function GraduateRegistrationForm({ values, onChange, onContinue }: Gradu
   return (
     <form className={styles.formulario} onSubmit={handleSubmit} noValidate aria-describedby="nota-obligatorios">
       <p id="nota-obligatorios" className={styles.nota}>
-        Todos los campos son obligatorios.
+        Todos los campos son obligatorios. Empieza por tu documento: si ya estás en nuestros registros, completamos
+        el resto por ti.
       </p>
 
       {errorCount > 0 ? (
@@ -60,16 +112,6 @@ export function GraduateRegistrationForm({ values, onChange, onContinue }: Gradu
       ) : null}
 
       <div className={styles.rejilla}>
-        <TextField
-          field="firstName" label="Nombres" autoComplete="given-name"
-          value={values.firstName} error={errors.firstName} inputRef={register("firstName")}
-          onValue={(v) => update("firstName", v)}
-        />
-        <TextField
-          field="lastName" label="Apellidos" autoComplete="family-name"
-          value={values.lastName} error={errors.lastName} inputRef={register("lastName")}
-          onValue={(v) => update("lastName", v)}
-        />
         <SelectField
           field="documentType" label="Tipo de documento" options={DOCUMENT_TYPES}
           value={values.documentType} error={errors.documentType} selectRef={register("documentType")}
@@ -79,6 +121,17 @@ export function GraduateRegistrationForm({ values, onChange, onContinue }: Gradu
           field="documentNumber" label="Número de documento" inputMode="text" autoComplete="off"
           value={values.documentNumber} error={errors.documentNumber} inputRef={register("documentNumber")}
           onValue={(v) => update("documentNumber", v)}
+        />
+        <LookupNotice state={lookup} />
+        <TextField
+          field="firstName" label="Nombres" autoComplete="given-name"
+          value={values.firstName} error={errors.firstName} inputRef={register("firstName")}
+          onValue={(v) => update("firstName", v)}
+        />
+        <TextField
+          field="lastName" label="Apellidos" autoComplete="family-name"
+          value={values.lastName} error={errors.lastName} inputRef={register("lastName")}
+          onValue={(v) => update("lastName", v)}
         />
         <TextField
           field="email" label="Correo electrónico" type="email" autoComplete="email" inputMode="email"
@@ -140,6 +193,59 @@ export function GraduateRegistrationForm({ values, onChange, onContinue }: Gradu
       </div>
     </form>
   );
+}
+
+/* ------------------------------------------------------------------ aviso M0 */
+
+function LookupNotice({ state }: { state: LookupState }) {
+  let content: ReactNode = null;
+  if (state.kind === "searching") {
+    content = <p className={styles.avisoBuscando}>Buscando tus datos en UNIR…</p>;
+  } else if (state.kind === "found") {
+    const { prefill, filled } = state;
+    const firstName = prefill.profile.firstName.split(" ")[0];
+    const date = prefill.context.surveyDate ? formatDate(prefill.context.surveyDate) : null;
+    content = (
+      <div className={styles.avisoEncontrado}>
+        <p className={styles.avisoTitulo}>
+          ¡Hola, {firstName}! Encontramos tus datos de UNIR
+          {prefill.demo ? <span className={styles.etiquetaDemo}>Datos de demostración</span> : null}
+        </p>
+        <p>
+          {filled > 0
+            ? `Completamos ${filled} ${filled === 1 ? "campo" : "campos"} con tu registro de egresado${date ? ` (encuesta del ${date})` : ""}. Revísalos y corrige lo que haya cambiado.`
+            : "Tus datos ya coinciden con tu registro de egresado. Revísalos por si algo cambió."}
+        </p>
+        {prefill.context.currentRole ? (
+          <p>
+            En ese registro trabajabas como <strong>{prefill.context.currentRole}</strong>
+            {prefill.context.company ? ` en ${prefill.context.company.replace(/\.$/, "")}` : ""}. Si ya no es así, lo
+            actualizas en el cuestionario.
+          </p>
+        ) : null}
+      </div>
+    );
+  } else if (state.kind === "notFound") {
+    content = (
+      <p className={styles.avisoNeutro}>No encontramos registros con ese documento. Completa tus datos a continuación.</p>
+    );
+  } else if (state.kind === "error") {
+    content = (
+      <p className={styles.avisoNeutro}>
+        No pudimos consultar tus datos de UNIR en este momento. Puedes completarlos a mano.
+      </p>
+    );
+  }
+  return (
+    <div className={styles.aviso} role="status" aria-live="polite">
+      {content}
+    </div>
+  );
+}
+
+function formatDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 /* ------------------------------------------------------------------ campos */

@@ -115,3 +115,30 @@ export interface ProgramRecommendation {
   reasons: string[];
   url: string | null;
 }
+
+/** Datos que la base institucional M0 (Momento 0) ya tiene del egresado. */
+export interface M0Prefill {
+  source: "M0";
+  /** true = registro ficticio de demostración. */
+  demo: boolean;
+  profile: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    country: string;
+    city: string;
+    program: string;
+    graduationYear: number | null;
+  };
+  survey: {
+    employmentStatus: string[];
+    targetRole: string;
+  };
+  context: {
+    currentRole: string | null;
+    company: string | null;
+    employed: boolean | null;
+    surveyDate: string | null;
+  };
+}

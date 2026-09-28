@@ -74,6 +74,7 @@ def cliente():
     if not DB_PRUEBA:
         pytest.skip("Define TEST_DATABASE_URL para probar la API contra Postgres.")
     os.environ["DATABASE_URL"] = DB_PRUEBA
+    os.environ["M0_DEMO"] = "true"
     from fastapi.testclient import TestClient
 
     from app import db
@@ -258,3 +259,39 @@ def test_api_registro_nuevo(cliente):
 ])
 def test_api_registro_rechaza_datos_invalidos(cliente, cambios):
     assert cliente.post("/api/registros", json=_registro(**cambios)).status_code == 422
+
+
+
+# ------------------------------------------------ precarga M0
+def test_m0_egresada_empleada(cliente):
+    r = cliente.get("/api/m0/CC/9990000001")
+    assert r.status_code == 200, r.text
+    datos = r.json()
+    assert datos["found"] is True and datos["demo"] is True
+    assert datos["profile"]["firstName"] == "Laura Camila"
+    assert datos["profile"]["program"] == "4" and datos["profile"]["graduationYear"] == 2024
+    assert datos["survey"]["employmentStatus"] == ["tiempo_completo"]
+    assert datos["context"]["currentRole"] == "Analista de datos"
+
+
+def test_m0_egresado_desempleado(cliente):
+    datos = cliente.get("/api/m0/CC/9990000002").json()
+    assert datos["survey"]["employmentStatus"] == ["buscando_empleo"]
+    assert datos["survey"]["targetRole"] == "Gerente comercial"
+    assert datos["context"]["employed"] is False
+
+
+@pytest.mark.parametrize("ruta", ["/api/m0/CC/12345678", "/api/m0/XX/9990000001", "/api/m0/CC/12"])
+def test_m0_no_encontrado(cliente, ruta):
+    r = cliente.get(ruta)
+    assert r.status_code == 200 and r.json() == {"found": False}
+
+
+def test_m0_precarga_es_registrable(cliente):
+    """Lo que devuelve M0, completado con las preguntas, debe pasar la validación del registro."""
+    datos = cliente.get("/api/m0/CC/9990000001").json()
+    registro = json.loads(json.dumps(REGISTRO))
+    registro["profile"].update({k: v for k, v in datos["profile"].items() if v})
+    registro["profile"].update({"documentType": "CC", "documentNumber": "9990000001"})
+    registro["survey"]["employmentStatus"] = datos["survey"]["employmentStatus"]
+    assert cliente.post("/api/registros", json=registro).status_code == 200

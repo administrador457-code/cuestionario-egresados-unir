@@ -83,6 +83,7 @@ tests/
 | GET | `/api/egresados/{token}/recomendaciones` | Recomendaciones guardadas |
 | POST | `/api/registros` | Registro nuevo (frontend `web/`): guarda y devuelve recomendaciones |
 | GET | `/api/registros/{token}/recomendaciones` | Recomendaciones de un registro nuevo |
+| GET | `/api/m0/{tipo}/{numero}` | Precarga desde la base M0 (Momento 0) por documento |
 
 El `token` es un UUID aleatorio: las URL de resultados no exponen el id ni el
 correo del egresado.
@@ -119,8 +120,29 @@ Proyecto de Railway `app-desarrollo-egresados-unir` (su `postgres` original no s
 | Servicio | Qué es | Configuración |
 |---|---|---|
 | `Postgres` | Base propia del cuestionario | Plantilla de Railway |
-| `cuestionario-web` | API + frontend | Arranque `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/api/health`. Variables `DATABASE_URL=${{Postgres.DATABASE_URL}}` y `CORS_ORIGINS` (dominios del frontend de Vercel) |
+| `cuestionario-web` | API + frontend | Arranque `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/api/health`. Variables `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `CORS_ORIGINS` (dominios del frontend de Vercel) y `M0_DEMO=true` (carga los egresados ficticios de M0) |
 | `cuestionario-sync` | Sincronización diaria del catálogo | Comando `python scripts/sincronizar_programas.py`, cron `0 11 * * *` (6 a. m. Colombia), reinicio `NEVER`. Variables `DATABASE_URL` y `PROGRAMAS_DATABASE_URL` |
+
+## Precarga desde M0
+
+`m0_egresados` representa la base institucional de la encuesta Momento 0. Al
+escribir su documento en el registro, el frontend consulta
+`GET /api/m0/{tipo}/{numero}` y precarga nombre, correo, teléfono, ciudad,
+programa, año de grado, situación laboral y cargo esperado. Solo completa
+campos vacíos o precargados antes; nunca pisa lo que el egresado escribió.
+
+Hoy hay dos egresados **ficticios** (`app/m0_demo.sql`), que se cargan al
+arrancar solo si la variable `M0_DEMO=true`:
+
+| Documento | Egresado | Situación en M0 |
+|---|---|---|
+| CC 9990000001 | Laura Camila Méndez Ortiz | Inteligencia de Negocio (2024), empleada como analista de datos |
+| CC 9990000002 | Andrés Felipe Rojas Vélez | Dirección Comercial y Ventas (2024), buscando empleo como gerente comercial |
+
+**Antes de conectar la base M0 real:** la consulta solo por documento devuelve
+datos personales a quien conozca el número. En producción debe exigir un
+segundo factor (por ejemplo, un código enviado al correo registrado en M0), y
+la autorización de datos de M0 debe cubrir este uso.
 
 La configuración vive en cada servicio de Railway (no hay `railway.json` en
 el repo). Cada `git push` a `main` redespliega los dos servicios.

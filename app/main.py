@@ -9,12 +9,14 @@ Endpoints:
 Registro y caracterizacion (frontend React de web/, en Vercel):
     POST /api/registros                        -> guarda el registro y devuelve recomendaciones
     GET  /api/registros/{token}/recomendaciones
+    GET  /api/m0/{tipo}/{numero}                -> precarga desde la base M0 (Momento 0)
 
 El frontend (carpeta /frontend) se sirve en la raiz del mismo servicio.
 """
 from __future__ import annotations
 
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -45,7 +47,8 @@ from .preguntas import (
     valores,
 )
 from .recomendador import recomendar
-from .registro import PROGRAMA_OTRO, VERSION_REGISTRO, RegistroEgresado, perfil_para_recomendador
+from .m0 import precarga
+from .registro import PROGRAMA_OTRO, TIPOS_DOCUMENTO, VERSION_REGISTRO, RegistroEgresado, perfil_para_recomendador
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
@@ -220,6 +223,20 @@ def ver_recomendaciones_registro(token: str) -> dict[str, Any]:
         "recommendations": [_recomendacion_para_web(r) for r in datos["recomendaciones"]],
     }
 
+
+# ------------------------------------------------------------------ M0 (precarga)
+@app.get("/api/m0/{tipo_documento}/{numero_documento}")
+def consultar_m0(tipo_documento: str, numero_documento: str) -> dict[str, Any]:
+    """Datos de M0 para precargar el registro. Responde {"found": false} si no hay
+    registro (no 404, para que el navegador no lo muestre como error). Solo por
+    documento: válido para la demo; en producción debe exigir un segundo factor."""
+    numero = numero_documento.strip()
+    if tipo_documento not in TIPOS_DOCUMENTO or not re.fullmatch(r"[A-Za-z0-9-]{4,20}", numero):
+        return {"found": False}
+    encontrado = db.buscar_m0(tipo_documento, numero)
+    if not encontrado:
+        return {"found": False}
+    return {"found": True, **precarga(encontrado)}
 
 if FRONTEND_DIR.is_dir():
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

@@ -23,6 +23,47 @@
   gap: 1.25rem 1.25rem;
 }
 
+/* Aviso de la precarga M0: ocupa las dos columnas, bajo el documento. */
+.aviso {
+  grid-column: 1 / -1;
+}
+
+.avisoBuscando {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}
+
+.avisoEncontrado {
+  display: grid;
+  gap: 0.375rem;
+  padding: 1rem 1.125rem;
+  border-left: 4px solid var(--verde);
+  border-radius: 6px;
+  background: var(--verde-suave);
+}
+
+.avisoTitulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: var(--verde);
+}
+
+.etiquetaDemo {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--verde);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.avisoNeutro {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}
+
 .campo {
   display: flex;
   flex-direction: column;
