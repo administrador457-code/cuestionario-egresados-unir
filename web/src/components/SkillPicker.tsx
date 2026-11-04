@@ -131,7 +131,7 @@ export function SkillPicker({ value, max, onChange }: SkillPickerProps) {
           aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
           autoComplete="off"
           placeholder={full ? "Llegaste al máximo" : "Ej. Power BI, SQL, negociación, pedagogía…"}
-          disabled={full || catalog === "error"}
+          disabled={full}
           value={query}
           maxLength={60}
           onChange={(event) => setQuery(event.target.value)}
@@ -175,7 +175,8 @@ export function SkillPicker({ value, max, onChange }: SkillPickerProps) {
 
       {catalog === "error" ? (
         <p className={styles.nota} role="alert">
-          No pudimos cargar el catálogo de habilidades. Revisa tu conexión y recarga la página.
+          No pudimos cargar las habilidades más pedidas. Puedes buscar las tuyas en el campo de arriba; si tampoco
+          aparecen resultados, recarga la página.
         </p>
       ) : null}
       {catalog === "empty" ? (

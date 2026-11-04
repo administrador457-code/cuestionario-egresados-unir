@@ -70,10 +70,19 @@ async def _ciclo_de_vida(_: FastAPI):
 
 app = FastAPI(title="Cuestionario de ingreso - Egresados UNIR", version="1.0.0", lifespan=_ciclo_de_vida)
 
+# Orígenes permitidos para el frontend. CORS_ORIGINS: lista exacta separada por
+# comas. CORS_ORIGIN_REGEX: patrón opcional para cubrir también las URL de
+# vista previa de Vercel (cambian en cada despliegue), por ejemplo
+# ^https://cuestionario-egresados-unir[a-z0-9-]*\.vercel\.app$
 _origenes = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
-if _origenes:
+_origen_patron = os.environ.get("CORS_ORIGIN_REGEX", "").strip() or None
+if _origenes or _origen_patron:
     app.add_middleware(
-        CORSMiddleware, allow_origins=_origenes, allow_methods=["GET", "POST"], allow_headers=["Content-Type"],
+        CORSMiddleware,
+        allow_origins=_origenes,
+        allow_origin_regex=_origen_patron,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
     )
 
 
