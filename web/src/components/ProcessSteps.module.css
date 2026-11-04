@@ -1,17 +1,33 @@
 /* Escritorio: panel lateral oscuro con las etapas en vertical. */
 .panel {
   height: 100%;
-  padding: 2.5rem 1.75rem;
+  padding: 1.75rem 1.25rem;
   background: var(--panel);
   color: var(--panel-texto);
 }
 
+/* Logo vertical en blanco y etiqueta, como en la barra lateral de pertinencia. */
+.marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  width: 112px;
+  height: auto;
+}
+
 .titulo {
-  margin-bottom: 2rem;
-  font-family: var(--fuente-titulo);
-  font-size: 1.375rem;
-  font-weight: 600;
-  color: var(--blanco);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--panel-etiqueta);
 }
 
 .lista {
@@ -29,7 +45,7 @@
   gap: 0.875rem;
   align-items: start;
   padding: 0.75rem 0.875rem;
-  border-radius: var(--radio);
+  border-radius: 10px;
 }
 
 .marcador {
@@ -39,7 +55,7 @@
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  border: 2px solid #57525e;
+  border: 2px solid #2e3d5f;
   font-weight: 700;
   font-size: var(--texto-pequeno);
   color: var(--panel-tenue);
@@ -62,13 +78,13 @@
 }
 
 .actual {
-  background: rgba(200, 16, 46, 0.16);
-  box-shadow: inset 3px 0 0 var(--rojo);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 3px 0 0 #4c9be8;
 }
 
 .actual .marcador {
-  border-color: var(--rojo);
-  background: var(--rojo);
+  border-color: var(--marca);
+  background: var(--marca);
   color: var(--blanco);
 }
 
@@ -92,13 +108,8 @@
     border-bottom: 1px solid var(--borde);
   }
 
-  .titulo {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
+  .marca {
+    display: none;
   }
 
   .lista {
@@ -136,11 +147,11 @@
   }
 
   .actual {
-    background: var(--rojo-suave);
-    box-shadow: inset 0 -3px 0 var(--rojo);
+    background: var(--marca-suave);
+    box-shadow: inset 0 -3px 0 var(--marca);
   }
 
   .actual .nombrePaso {
-    color: var(--rojo-oscuro);
+    color: var(--marca-oscura);
   }
 }

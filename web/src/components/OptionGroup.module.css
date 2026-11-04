@@ -12,8 +12,8 @@
   width: 100%;
   padding: 0;
   font-family: var(--fuente-titulo);
-  font-size: 1.3125rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 700;
   line-height: 1.25;
   color: var(--texto);
 }

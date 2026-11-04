@@ -15,16 +15,16 @@
 
 .primario {
   border: 0;
-  background: var(--rojo);
+  background: var(--marca);
   color: var(--blanco);
 }
 
 .primario:hover:not(:disabled) {
-  background: var(--rojo-oscuro);
+  background: var(--marca-oscura);
 }
 
 .primario:disabled {
-  background: #d98a97;
+  background: #8fb3d6;
   cursor: not-allowed;
 }
 
@@ -45,5 +45,5 @@
 }
 
 .primario[aria-disabled="true"] {
-  background: #d98a97;
+  background: #8fb3d6;
 }

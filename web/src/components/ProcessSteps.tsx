@@ -1,3 +1,4 @@
+import logoVertical from "../assets/logos/unir-fundacion-vertical-blanco.svg";
 import type { Stage } from "../types/graduate";
 import styles from "./ProcessSteps.module.css";
 
@@ -18,7 +19,11 @@ export function ProcessSteps({ stage }: ProcessStepsProps) {
 
   return (
     <nav className={styles.panel} aria-label="Etapas del registro">
-      <p className={styles.titulo}>Registro de egresados</p>
+      <div className={styles.marca}>
+        {/* Decorativo: el nombre de la institución ya está en el logo de la barra superior */}
+        <img className={styles.logo} src={logoVertical} alt="" width={120} height={95} />
+        <p className={styles.titulo}>Registro de egresados</p>
+      </div>
       <ol className={styles.lista}>
         {STEPS.map((step, index) => {
           const isCurrent = index === currentIndex;

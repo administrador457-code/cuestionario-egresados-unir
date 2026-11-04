@@ -91,8 +91,8 @@
 }
 
 .programa:first-child {
-  border-color: var(--rojo);
-  background: var(--rojo-suave);
+  border-color: var(--marca);
+  background: var(--marca-suave);
 }
 
 .posicion {
@@ -108,7 +108,7 @@
 }
 
 .programa:first-child .posicion {
-  background: var(--rojo);
+  background: var(--marca);
 }
 
 .detallePrograma {
@@ -148,7 +148,7 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--rojo);
+  background: var(--marca);
 }
 
 .razones {

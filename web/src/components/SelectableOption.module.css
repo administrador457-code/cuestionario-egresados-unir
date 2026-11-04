@@ -44,14 +44,14 @@
 }
 
 .control:checked + .tarjeta {
-  border-color: var(--rojo);
-  background: var(--rojo-suave);
+  border-color: var(--marca);
+  background: var(--marca-suave);
   font-weight: 600;
 }
 
 .control:checked + .tarjeta .indicador {
-  border-color: var(--rojo);
-  background: var(--rojo);
+  border-color: var(--marca);
+  background: var(--marca);
 }
 
 .control:focus-visible + .tarjeta {

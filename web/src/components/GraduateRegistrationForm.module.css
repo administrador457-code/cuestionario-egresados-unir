@@ -10,10 +10,10 @@
 
 .resumenErrores {
   padding: 0.75rem 1rem;
-  border-left: 4px solid var(--rojo);
+  border-left: 4px solid var(--error);
   border-radius: 6px;
-  background: var(--rojo-suave);
-  color: var(--rojo-oscuro);
+  background: var(--error-suave);
+  color: var(--error);
   font-weight: 600;
 }
 
@@ -26,6 +26,11 @@
 /* Aviso de la precarga M0: ocupa las dos columnas, bajo el documento. */
 .aviso {
   grid-column: 1 / -1;
+}
+
+/* Vacío no debe dejar un hueco: compensa el espacio entre filas de la rejilla. */
+.aviso:empty {
+  margin-top: -1.25rem;
 }
 
 .avisoBuscando {
@@ -97,12 +102,12 @@
 }
 
 .control:focus-visible {
-  border-color: var(--rojo-oscuro);
+  border-color: var(--marca-oscura);
 }
 
 .control[aria-invalid="true"] {
-  border-color: var(--rojo);
-  background-color: #fffbfc;
+  border-color: var(--error);
+  background-color: var(--error-suave);
 }
 
 .lista {
@@ -139,7 +144,7 @@
   width: 1.25rem;
   height: 1.25rem;
   margin: 0.15rem 0 0;
-  accent-color: var(--rojo);
+  accent-color: var(--marca);
   cursor: pointer;
 }
 

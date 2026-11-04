@@ -1,31 +1,42 @@
-/* Tokens de diseño: paleta institucional UNIR y escala tipográfica. */
+/* Tokens de diseño: identidad UNIR Colombia, alineada con la plataforma de
+   pertinencia (Observatorio de inteligencia curricular). */
 :root {
-  --rojo: #c8102e;
-  --rojo-oscuro: #8b0b20;
-  --rojo-suave: #f9edf0;
-  --fondo: #f6f5f7;
-  --panel: #26232a;
-  --panel-texto: #d9d6dd;
-  --panel-tenue: #a19ca8;
-  --texto: #222128;
-  --texto-secundario: #686772;
-  --borde: #e5e3e7;
-  --borde-fuerte: #c9c6ce;
+  /* Marca */
+  --marca: #005da8;            /* azul UNIR */
+  --marca-oscura: #004a86;
+  --marca-suave: #e7f0f8;
+  --marca-viva: #0d61f2;       /* azul del logo, solo para acentos puntuales */
+  --negro-unir: #050505;
+
+  /* Superficies y texto */
+  --fondo: #f4f7fa;
+  --panel: #0b1730;            /* barra lateral, como en pertinencia */
+  --panel-texto: #c9d3e6;
+  --panel-tenue: #8b9ac0;
+  --panel-etiqueta: #7b8aae;
+  --texto: #0b2438;
+  --texto-secundario: #5d6b7a;
+  --borde: #d8e1ea;
+  --borde-fuerte: #b9c7d5;
   --blanco: #ffffff;
-  --verde: #196b45;
-  --verde-suave: #e8f3ed;
 
-  --fuente-texto: "DM Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --fuente-titulo: "Newsreader", Georgia, "Times New Roman", serif;
+  /* Estados */
+  --verde: #2f7d68;
+  --verde-suave: #e6f2ee;
+  --error: #b42318;
+  --error-suave: #fdf1f0;
 
-  --texto-base: 1rem;       /* 16 px mínimo para el cuerpo */
-  --texto-etiqueta: 0.9375rem; /* 15 px, por encima del mínimo de 14 px */
+  --fuente-texto: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --fuente-titulo: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --texto-base: 1rem;          /* 16 px mínimo para el cuerpo */
+  --texto-etiqueta: 0.9375rem; /* 15 px */
   --texto-pequeno: 0.875rem;
 
   --radio-grande: 16px;
   --radio: 12px;
   --radio-control: 10px;
-  --sombra: 0 1px 2px rgba(38, 35, 42, 0.06), 0 8px 24px -12px rgba(38, 35, 42, 0.18);
-  --foco: 0 0 0 3px var(--blanco), 0 0 0 5px var(--rojo-oscuro);
-  --alto-encabezado: 64px;
+  --sombra: 0 14px 34px rgba(8, 31, 52, 0.08);
+  --foco: 0 0 0 3px var(--blanco), 0 0 0 5px var(--marca);
+  --alto-encabezado: 76px;
 }

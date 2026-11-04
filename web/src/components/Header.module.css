@@ -1,55 +1,68 @@
 .encabezado {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: var(--alto-encabezado);
-  padding: 0.5rem clamp(1rem, 3vw, 2rem);
-  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+  position: relative;
+  z-index: 15;
   background: var(--blanco);
   border-bottom: 1px solid var(--borde);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
-.marca {
+.interior {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1.25rem;
+  min-height: var(--alto-encabezado);
+  padding: 0.5rem clamp(1rem, 3vw, 2rem);
+}
+
+.logo {
+  flex: 0 0 auto;
+  width: 220px;
+  height: auto;
+}
+
+.titulo {
   min-width: 0;
+  padding-left: 1.1rem;
+  border-left: 1px solid var(--borde);
 }
 
-.sigla {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.625rem;
-  border-radius: 6px;
-  background: var(--rojo);
-  color: var(--blanco);
+.titulo span {
+  display: block;
+  color: var(--marca);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.titulo strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--negro-unir);
+  font-size: 1rem;
   font-weight: 700;
-  font-size: 1.0625rem;
-  letter-spacing: 0.06em;
-}
-
-.nombre {
-  font-weight: 500;
-  color: var(--texto);
+  line-height: 1.25;
 }
 
 .ayuda {
   flex-shrink: 0;
-  font-weight: 600;
-  font-size: var(--texto-pequeno);
-  text-underline-offset: 3px;
-  border-radius: 4px;
+  margin-left: auto;
   padding: 0.5rem 0.25rem;
+  border-radius: 4px;
+  color: var(--marca);
+  font-size: var(--texto-pequeno);
+  font-weight: 700;
+  text-underline-offset: 3px;
 }
 
-@media (max-width: 640px) {
-  .nombre {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
+@media (max-width: 760px) {
+  .titulo {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .logo {
+    width: 168px;
   }
 }

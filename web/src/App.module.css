@@ -81,7 +81,7 @@
 .avisoPregunta {
   margin: 0 0 1rem;
   padding-left: 1.125rem;
-  color: var(--rojo-oscuro);
+  color: var(--error);
   font-weight: 600;
 }
 
@@ -91,10 +91,10 @@
   gap: 0.875rem;
   justify-items: start;
   padding: 1rem 1.125rem;
-  border-left: 4px solid var(--rojo);
+  border-left: 4px solid var(--error);
   border-radius: 6px;
-  background: var(--rojo-suave);
-  color: var(--rojo-oscuro);
+  background: var(--error-suave);
+  color: var(--error);
   font-weight: 500;
 }
 

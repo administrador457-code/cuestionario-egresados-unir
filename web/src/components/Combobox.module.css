@@ -26,11 +26,11 @@
 }
 
 .campo:focus-visible {
-  border-color: var(--rojo-oscuro);
+  border-color: var(--marca-oscura);
 }
 
 .campo::placeholder {
-  color: #8e8c97;
+  color: #8a96a3;
 }
 
 .campo:disabled {
@@ -76,11 +76,11 @@
 
 .opcion:hover,
 .activa {
-  background: var(--rojo-suave);
+  background: var(--marca-suave);
 }
 
 .activa {
-  box-shadow: inset 3px 0 0 var(--rojo);
+  box-shadow: inset 3px 0 0 var(--marca);
 }
 
 .demanda {
@@ -122,9 +122,9 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.3125rem 0.375rem 0.3125rem 0.875rem;
-  border: 1.5px solid var(--rojo);
+  border: 1.5px solid var(--marca);
   border-radius: 999px;
-  background: var(--rojo-suave);
+  background: var(--marca-suave);
   font-weight: 600;
 }
 
@@ -137,12 +137,12 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--rojo-oscuro);
+  color: var(--marca-oscura);
   cursor: pointer;
 }
 
 .quitar:hover {
-  background: rgba(200, 16, 46, 0.12);
+  background: rgba(0, 93, 168, 0.12);
 }
 
 .populares {
@@ -165,7 +165,7 @@
 
 .sugerida:hover:not(:disabled) {
   border-style: solid;
-  border-color: var(--rojo);
+  border-color: var(--marca);
 }
 
 .sugerida:disabled {
